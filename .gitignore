@@ -1,3 +1,5 @@
+.DS_Store
+
 # Built application files
 *.apk
 *.ap_
@@ -53,3 +55,12 @@ google-services.json
 freeline.py
 freeline/
 freeline_project_description.json
+
+# Bicycle
+Bicycle/.idea/workspace.xml
+Bicycle/.idea/tasks.xml
+Bicycle/.idea/gradle.xml
+Bicycle/.idea/dictionaries
+Bicycle/.idea/libraries
+Bicycle/gradle
+fabric.properties
