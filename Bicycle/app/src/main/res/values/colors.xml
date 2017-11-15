@@ -15,7 +15,7 @@
     limitations under the License.
 -->
 <resources>
-    <color name="ic_launcher_background">@color/bic_color_purple</color>
+    <color name="ic_launcher_background">@color/bic_color_purple_dark</color>
     <color name="bic_color_primary">@color/bic_color_purple</color>
     <color name="bic_color_primary_dark">@color/bic_color_purple_dark</color>
     <color name="bic_color_accent">@color/bic_color_orange_light</color>

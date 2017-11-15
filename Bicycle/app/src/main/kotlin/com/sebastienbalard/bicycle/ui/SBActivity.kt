@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package com.sebastienbalard.bicycle
+package com.sebastienbalard.bicycle.ui
 
-import android.app.Application
+import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
+import com.sebastienbalard.bicycle.R
 import com.sebastienbalard.bicycle.misc.SBLog
+import kotlinx.android.synthetic.main.widget_appbar.*
 
-class BICApplication : Application() {
+open class SBActivity : AppCompatActivity() {
 
-    companion object: SBLog()
-
-    override fun onCreate() {
-        super.onCreate()
-        v("onCreate")
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        //overridePendingTransition(0,0)
     }
 }

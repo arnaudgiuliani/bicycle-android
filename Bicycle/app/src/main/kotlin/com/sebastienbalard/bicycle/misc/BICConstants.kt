@@ -14,18 +14,6 @@
  * limitations under the License.
  */
 
-package com.sebastienbalard.bicycle
+package com.sebastienbalard.bicycle.misc
 
-import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
-
-class BICHomeActivity : AppCompatActivity() {
-
-    companion object: SBLog()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_home)
-        v { "onCreate" }
-    }
-}
+const val NOTIFICATION_REQUEST_PERMISSION_LOCATION: Int = 100000

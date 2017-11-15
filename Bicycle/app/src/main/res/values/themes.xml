@@ -29,9 +29,14 @@
         <item name="windowActionModeOverlay">true</item>
     </style>
 
-    <style name="SQTheme.ActionBar" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
+    <style name="AppTheme.AppBar" parent="Theme.AppCompat.Light">
+        <item name="colorPrimary">@color/bic_color_primary</item>
+        <item name="android:textColorPrimary">@color/bic_color_white</item>
+        <item name="actionMenuTextColor">@color/bic_color_white</item>
+        <item name="popupTheme">@style/AppTheme.Popup</item>
+    </style>
 
-    <style name="SQTheme.Popup" parent="ThemeOverlay.AppCompat.Light"/>
+    <style name="AppTheme.Popup" parent="@style/ThemeOverlay.AppCompat.Light"/>
 
     <style name="SQTheme.PopupMenu" parent="@style/Widget.AppCompat.PopupMenu">
         <item name="android:dropDownHorizontalOffset">-24dp</item>

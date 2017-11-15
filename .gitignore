@@ -64,3 +64,5 @@ Bicycle/.idea/dictionaries
 Bicycle/.idea/libraries
 Bicycle/gradle
 fabric.properties
+gradle.properties
+kotlinc.xml

@@ -16,4 +16,11 @@
 -->
 <resources>
     <string name="app_name">Bicycle</string>
+    <!-- actions -->
+    <string name="bic_actions_allow">Autoriser</string>
+    <!-- messages -->
+    <string name="bic_messages_error_no_play_services_installed">Merci de vérifier que les Google Play Services sont
+        bien installés sur votre appareil</string>
+    <string name="bic_messages_warning_request_location_permissions">L\'application fonctionnera en mode dégradé si
+        vous ne lui permettez pas d\'accéder à votre position</string>
 </resources>
