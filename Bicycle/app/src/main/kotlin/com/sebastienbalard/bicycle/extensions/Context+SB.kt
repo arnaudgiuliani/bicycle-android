@@ -14,6 +14,16 @@
  * limitations under the License.
  */
 
-package com.sebastienbalard.bicycle.misc
+package com.sebastienbalard.bicycle.extensions
 
-const val NOTIFICATION_REQUEST_PERMISSION_LOCATION: Int = 10000
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.support.v4.content.ContextCompat
+
+fun Context.getIntentForApplicationSettings(): Intent {
+    return Intent("android.settings.APPLICATION_DETAILS_SETTINGS", Uri.parse("package:" + packageName)).
+            addCategory(Intent.CATEGORY_DEFAULT).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+}

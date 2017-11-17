@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.sebastienbalard.bicycle.ui
+package com.sebastienbalard.bicycle.viewmodels
 
-import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
-import com.sebastienbalard.bicycle.R
-import com.sebastienbalard.bicycle.misc.SBLog
-import kotlinx.android.synthetic.main.widget_appbar.*
+import android.arch.lifecycle.LifecycleOwner
+import android.arch.lifecycle.Observer
+import android.arch.lifecycle.ViewModel
+import android.location.Location
+import com.sebastienbalard.bicycle.models.SBLocationLiveData
 
-open class SBActivity : AppCompatActivity() {
+class BICMapViewModel : ViewModel() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        //overridePendingTransition(0,0)
-    }
+    var userLocation: SBLocationLiveData? = null
+
+    fun observeLocationUpdates(lifecycleOwner: LifecycleOwner, observer: Observer<Location>) =
+            userLocation?.observe(lifecycleOwner, observer)
 }

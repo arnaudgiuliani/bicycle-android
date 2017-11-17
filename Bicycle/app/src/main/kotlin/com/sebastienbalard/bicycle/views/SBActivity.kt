@@ -14,6 +14,18 @@
  * limitations under the License.
  */
 
-package com.sebastienbalard.bicycle.misc
+package com.sebastienbalard.bicycle.views
 
-const val NOTIFICATION_REQUEST_PERMISSION_LOCATION: Int = 10000
+import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
+import com.sebastienbalard.bicycle.R
+import com.sebastienbalard.bicycle.misc.SBLog
+import kotlinx.android.synthetic.main.widget_appbar.*
+
+open class SBActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        //overridePendingTransition(0,0)
+    }
+}
