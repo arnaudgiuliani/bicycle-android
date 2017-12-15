@@ -20,22 +20,20 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
+import android.location.Location
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.*
 import com.sebastienbalard.bicycle.R
-import com.sebastienbalard.bicycle.extensions.getIntentForApplicationSettings
-import com.sebastienbalard.bicycle.extensions.hasPermissions
-import com.sebastienbalard.bicycle.extensions.processPermissionsResults
-import com.sebastienbalard.bicycle.extensions.requestLocationPermissionsIfNeeded
+import com.sebastienbalard.bicycle.extensions.*
 import com.sebastienbalard.bicycle.misc.NOTIFICATION_REQUEST_PERMISSION_LOCATION
 import com.sebastienbalard.bicycle.misc.SBLog
 import com.sebastienbalard.bicycle.viewmodels.BICMapViewModel
-import com.sebastienbalard.bicycle.models.SBLocationLiveData
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.widget_appbar.*
+
 
 class BICHomeActivity : SBActivity() {
 
@@ -44,7 +42,7 @@ class BICHomeActivity : SBActivity() {
     private lateinit var mapViewModel: BICMapViewModel
     private var googleMap: GoogleMap? = null
 
-    //region Lifecycle methods
+    //bounds Lifecycle methods
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
@@ -53,10 +51,8 @@ class BICHomeActivity : SBActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
 
         mapViewModel = ViewModelProviders.of(this).get(BICMapViewModel::class.java)
-        mapViewModel.userLocation = SBLocationLiveData(this)
 
-        mapView.onCreate(savedInstanceState)
-        initGoogleMap()
+        initGoogleMap(savedInstanceState)
     }
 
     override fun onStart() {
@@ -72,14 +68,10 @@ class BICHomeActivity : SBActivity() {
             NOTIFICATION_REQUEST_PERMISSION_LOCATION ->
                 processPermissionsResults(permissions, grantResults,
                         onGranted = {
-                            mapViewModel.observeLocationUpdates(this, Observer { location ->
-                                location?.let {
-                                    v("move camera to new location")
-                                    googleMap!!.moveCamera(CameraUpdateFactory.newLatLng(LatLng(location.latitude, location.longitude)))
-                                    googleMap!!.animateCamera(CameraUpdateFactory.zoomTo(16f), 1000, null)
-                                }
+                            mapViewModel.userLocation.observe(this, Observer { location ->
+                                moveCamera(location)
                             })
-                            this.refreshLayout()
+                            refreshLayout()
                         },
                         onDenied = {
                             Snackbar.make(toolbar, R.string.bic_messages_warning_request_location_permissions, Snackbar.LENGTH_LONG).
@@ -95,12 +87,44 @@ class BICHomeActivity : SBActivity() {
         super.onResume()
         v("onResume")
         mapView.onResume()
+        mapViewModel.hasCurrentContractChanged.observe(this, Observer { hasChanged ->
+            hasChanged?.let {
+                if (!hasChanged) {
+                    v("current contract has not changed")
+                    //TODO: reload clustering
+                }
+            }
+        })
+        mapViewModel.currentContract.observe(this, Observer { contract ->
+            if (contract == null) {
+                d("current bounds is out of contracts covers")
+                //stopTimer()
+            } else {
+                //stopTimer()
+                d("refresh contract stations: ${contract.name} (${contract.provider.tag})")
+                mapViewModel.loadCurrentContractStations()
+                //TODO: refresh contract stations data
+                //startTimer()
+            }
+        })
+        mapViewModel.currentStations.observe(this, Observer { stations ->
+            //var marker: Marker? = null
+            var options: MarkerOptions?
+            googleMap!!.clear()
+            stations?.map { station ->
+                options = MarkerOptions()
+                options!!.position(station.location)
+                options!!.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET))
+                googleMap!!.addMarker(options)
+            }
+        })
     }
 
     override fun onPause() {
         super.onPause()
         v("onPause")
         mapView.onPause()
+        mapViewModel.currentContract.removeObservers(this)
     }
 
     override fun onStop() {
@@ -122,7 +146,27 @@ class BICHomeActivity : SBActivity() {
     }
     //endregion
 
-    //region Private methods
+    //bounds Private methods
+    private fun refreshMarkers() {
+        val level = googleMap!!.cameraPosition.zoom.toInt()
+        d("current zoom level: $level")
+        if (level >= 10) {
+            mapViewModel.determineCurrentContract(googleMap!!.projection.visibleRegion.latLngBounds)
+        } else {
+            mapViewModel.currentContract.value = null
+            //stopTimer()
+            //TODO: generate contract markers
+        }
+    }
+
+    private fun moveCamera(location: Location?) {
+        location?.let {
+            v("move camera to new location")
+            googleMap!!.moveCamera(CameraUpdateFactory.newLatLng(LatLng(location.latitude, location.longitude)))
+            googleMap!!.animateCamera(CameraUpdateFactory.zoomTo(16f), 1000, null)
+        }
+    }
+
     @SuppressLint("MissingPermission")
     private fun refreshLayout() {
         googleMap?.let {
@@ -132,7 +176,8 @@ class BICHomeActivity : SBActivity() {
         }
     }
 
-    private fun initGoogleMap() {
+    private fun initGoogleMap(savedInstanceState: Bundle?) {
+        mapView.onCreate(savedInstanceState)
         mapView.getMapAsync { map ->
 
             googleMap = map
@@ -142,21 +187,19 @@ class BICHomeActivity : SBActivity() {
                     v("onMarkerClick")
                     false
                 }
+                googleMap!!.setOnCameraIdleListener {
+                    v("onCameraIdle")
+                    refreshMarkers()
+                }
                 googleMap!!.uiSettings.isCompassEnabled = true
                 googleMap!!.uiSettings.isZoomControlsEnabled = true
                 googleMap!!.uiSettings.isMapToolbarEnabled = true
 
-                //OLSGoogleMapsUtils.alignTopZoomControls(this, mMapView)
-
                 requestLocationPermissionsIfNeeded(NOTIFICATION_REQUEST_PERMISSION_LOCATION, onGranted = {
-                    mapViewModel.observeLocationUpdates(this, Observer { location ->
-                        location?.let {
-                            v("move camera to new location")
-                            googleMap!!.moveCamera(CameraUpdateFactory.newLatLng(LatLng(location.latitude, location.longitude)))
-                            googleMap!!.animateCamera(CameraUpdateFactory.zoomTo(16f), 1000, null)
-                        }
+                    mapViewModel.userLocation.observe(this, Observer { location ->
+                        moveCamera(location)
                     })
-                    this.refreshLayout()
+                    refreshLayout()
                 })
 
             } else {
