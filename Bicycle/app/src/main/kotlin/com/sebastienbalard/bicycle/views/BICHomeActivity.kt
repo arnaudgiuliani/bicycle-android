@@ -26,6 +26,7 @@ import android.support.design.widget.Snackbar
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.*
+import com.google.maps.android.clustering.ClusterManager
 import com.sebastienbalard.bicycle.R
 import com.sebastienbalard.bicycle.extensions.*
 import com.sebastienbalard.bicycle.misc.NOTIFICATION_REQUEST_PERMISSION_LOCATION
@@ -41,8 +42,9 @@ class BICHomeActivity : SBActivity() {
 
     private lateinit var mapViewModel: BICMapViewModel
     private var googleMap: GoogleMap? = null
+    private var clusterManager: ClusterManager<BICStationAnnotation>? = null
 
-    //bounds Lifecycle methods
+    //region Lifecycle methods
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
@@ -91,7 +93,8 @@ class BICHomeActivity : SBActivity() {
             hasChanged?.let {
                 if (!hasChanged) {
                     v("current contract has not changed")
-                    //TODO: reload clustering
+                    // reload clustering
+                    clusterManager?.cluster()
                 }
             }
         })
@@ -102,20 +105,17 @@ class BICHomeActivity : SBActivity() {
             } else {
                 //stopTimer()
                 d("refresh contract stations: ${contract.name} (${contract.provider.tag})")
+                // refresh current contract stations data
                 mapViewModel.loadCurrentContractStations()
-                //TODO: refresh contract stations data
                 //startTimer()
             }
         })
         mapViewModel.currentStations.observe(this, Observer { stations ->
-            //var marker: Marker? = null
-            var options: MarkerOptions?
             googleMap!!.clear()
+            clusterManager?.clearItems()
             stations?.map { station ->
-                options = MarkerOptions()
-                options!!.position(station.location)
-                options!!.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET))
-                googleMap!!.addMarker(options)
+                clusterManager?.addItem(BICStationAnnotation(station))
+                clusterManager?.cluster()
             }
         })
     }
@@ -146,7 +146,7 @@ class BICHomeActivity : SBActivity() {
     }
     //endregion
 
-    //bounds Private methods
+    //region Private methods
     private fun refreshMarkers() {
         val level = googleMap!!.cameraPosition.zoom.toInt()
         d("current zoom level: $level")
@@ -201,6 +201,9 @@ class BICHomeActivity : SBActivity() {
                     })
                     refreshLayout()
                 })
+                clusterManager = ClusterManager<BICStationAnnotation>(this, googleMap!!)
+                clusterManager?.renderer = BICStationAnnotation.Renderer(this, googleMap!!, clusterManager!!)
+                googleMap!!.setOnInfoWindowClickListener(clusterManager)
 
             } else {
                 Snackbar.make(toolbar, R.string.bic_messages_error_no_play_services_installed, Snackbar.LENGTH_LONG).show()

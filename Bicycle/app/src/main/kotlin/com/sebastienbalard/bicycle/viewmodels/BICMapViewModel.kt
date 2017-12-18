@@ -43,19 +43,25 @@ class BICMapViewModel(application: Application) : AndroidViewModel(application) 
     var currentContract = MutableLiveData<BICContract>()
     var hasCurrentContractChanged = MutableLiveData<Boolean>()
     var currentStations = MutableLiveData<List<BICStation>>()
+    private var cacheStations = HashMap<String, List<BICStation>>()
 
     init {
         loadContracts()
     }
 
     fun loadCurrentContractStations() {
-        WSFacade.getStationsByContract(currentContract.value!!, success = {
-            it?.let {
-                currentStations.value = it
-            }
-        }, failure = {
-            currentStations.value = null
-        })
+        if (cacheStations.containsKey(currentContract.value!!.name)) {
+            currentStations.value = cacheStations.getValue(currentContract.value!!.name)
+        } else {
+            WSFacade.getStationsByContract(currentContract.value!!, success = {
+                it?.let {
+                    cacheStations.set(currentContract.value!!.name, it)
+                    currentStations.value = it
+                }
+            }, failure = {
+                currentStations.value = null
+            })
+        }
     }
 
     fun determineCurrentContract(visibleBounds: LatLngBounds) {
@@ -74,12 +80,14 @@ class BICMapViewModel(application: Application) : AndroidViewModel(application) 
 
         if (current == null || invalidateCurrentContract) {
             current = getContractFor(visibleBounds.center)
-            hasChanged = hasChanged || currentContract.value != null
+            hasChanged = hasChanged || current != null
         }
 
-        currentContract.value = current
         current?.let {
             hasCurrentContractChanged.value = hasChanged
+            if (hasChanged) {
+                currentContract.value = current!!
+            }
         }
     }
 
