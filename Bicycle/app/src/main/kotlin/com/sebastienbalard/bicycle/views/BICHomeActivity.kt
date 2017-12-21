@@ -25,16 +25,23 @@ import android.os.Bundle
 import android.support.design.widget.Snackbar
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.model.*
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
 import com.google.maps.android.clustering.ClusterManager
 import com.sebastienbalard.bicycle.R
 import com.sebastienbalard.bicycle.extensions.*
 import com.sebastienbalard.bicycle.misc.NOTIFICATION_REQUEST_PERMISSION_LOCATION
 import com.sebastienbalard.bicycle.misc.SBLog
+import com.sebastienbalard.bicycle.models.BICStation
 import com.sebastienbalard.bicycle.viewmodels.BICMapViewModel
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.widget_appbar.*
-
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.run
 
 class BICHomeActivity : SBActivity() {
 
@@ -43,6 +50,7 @@ class BICHomeActivity : SBActivity() {
     private lateinit var mapViewModel: BICMapViewModel
     private var googleMap: GoogleMap? = null
     private var clusterManager: ClusterManager<BICStationAnnotation>? = null
+    private var contractsAnnotations: MutableList<Marker>? = null
 
     //region Lifecycle methods
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,7 +99,7 @@ class BICHomeActivity : SBActivity() {
         mapView.onResume()
         mapViewModel.hasCurrentContractChanged.observe(this, Observer { hasChanged ->
             hasChanged?.let {
-                if (!hasChanged) {
+                if (!it) {
                     v("current contract has not changed")
                     // reload clustering
                     clusterManager?.cluster()
@@ -111,7 +119,6 @@ class BICHomeActivity : SBActivity() {
             }
         })
         mapViewModel.currentStations.observe(this, Observer { stations ->
-            googleMap!!.clear()
             clusterManager?.clearItems()
             stations?.map { station ->
                 clusterManager?.addItem(BICStationAnnotation(station))
@@ -148,21 +155,68 @@ class BICHomeActivity : SBActivity() {
 
     //region Private methods
     private fun refreshMarkers() {
-        val level = googleMap!!.cameraPosition.zoom.toInt()
-        d("current zoom level: $level")
-        if (level >= 10) {
-            mapViewModel.determineCurrentContract(googleMap!!.projection.visibleRegion.latLngBounds)
-        } else {
-            mapViewModel.currentContract.value = null
-            //stopTimer()
-            //TODO: generate contract markers
+        val level = googleMap?.cameraPosition?.zoom?.toInt()
+        level?.let {
+            d("current zoom level: $level")
+            if (it >= 10) {
+                deleteContractsAnnotations()
+                mapViewModel.determineCurrentContract(googleMap!!.projection.visibleRegion.latLngBounds)
+            } else {
+                mapViewModel.currentContract.value = null
+                //stopTimer()
+                createContractsAnnotations()
+            }
+        }
+    }
+
+    private fun deleteContractsAnnotations() {
+        contractsAnnotations?.let {
+            if (it.size > 0) {
+                d("delete contracts annotations")
+                it.map { marker -> marker.remove() }
+                it.clear()
+            }
+        }
+    }
+
+    private fun createContractsAnnotations() {
+        d("create contracts annotations")
+        val hasMarkers = clusterManager?.markerCollection?.markers?.isNotEmpty()?.or(false)!!
+        val hasClusterMarkers = clusterManager?.clusterMarkerCollection?.markers?.isNotEmpty()?.or(false)!!
+        if (hasMarkers || hasClusterMarkers) {
+            clusterManager?.clearItems()
+            clusterManager?.cluster()
+        }
+        if (contractsAnnotations?.size == 0) {
+            async(CommonPool) {
+                var options: MarkerOptions
+                mapViewModel.allContracts.map { contract ->
+                    options = MarkerOptions()
+                    options.position(contract.center)
+                    options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)).title(contract.name)
+                    run(UI) {
+                        googleMap?.addMarker(options)?.let {
+                            contractsAnnotations?.add(it)
+                        }
+                    }
+                }
+                run(UI) {
+                    // do this to avoid partial contracts display after activity launch
+                    val level = googleMap?.cameraPosition?.zoom?.toInt()
+                    level?.let {
+                        if (it >= 10) {
+                            deleteContractsAnnotations()
+                        }
+                    }
+                }
+            }
         }
     }
 
     private fun moveCamera(location: Location?) {
         location?.let {
             v("move camera to new location")
-            googleMap!!.moveCamera(CameraUpdateFactory.newLatLng(LatLng(location.latitude, location.longitude)))
+            googleMap!!.moveCamera(CameraUpdateFactory.newLatLng(LatLng(it.latitude, it.longitude)))
             googleMap!!.animateCamera(CameraUpdateFactory.zoomTo(16f), 1000, null)
         }
     }
@@ -171,8 +225,8 @@ class BICHomeActivity : SBActivity() {
     private fun refreshLayout() {
         googleMap?.let {
             val hasLocationPermissions = hasPermissions(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
-            googleMap!!.isMyLocationEnabled = hasLocationPermissions
-            googleMap!!.uiSettings.isMyLocationButtonEnabled = hasLocationPermissions
+            it.isMyLocationEnabled = hasLocationPermissions
+            it.uiSettings.isMyLocationButtonEnabled = hasLocationPermissions
         }
     }
 
@@ -204,6 +258,7 @@ class BICHomeActivity : SBActivity() {
                 clusterManager = ClusterManager<BICStationAnnotation>(this, googleMap!!)
                 clusterManager?.renderer = BICStationAnnotation.Renderer(this, googleMap!!, clusterManager!!)
                 googleMap!!.setOnInfoWindowClickListener(clusterManager)
+                contractsAnnotations = mutableListOf<Marker>()
 
             } else {
                 Snackbar.make(toolbar, R.string.bic_messages_error_no_play_services_installed, Snackbar.LENGTH_LONG).show()

@@ -39,7 +39,7 @@ class BICMapViewModel(application: Application) : AndroidViewModel(application) 
     companion object : SBLog()
 
     var userLocation = SBLocationLiveData(getApplication())
-    var allContracts = MutableLiveData<List<BICContract>>()
+    var allContracts = ArrayList<BICContract>()
     var currentContract = MutableLiveData<BICContract>()
     var hasCurrentContractChanged = MutableLiveData<Boolean>()
     var currentStations = MutableLiveData<List<BICStation>>()
@@ -71,7 +71,7 @@ class BICMapViewModel(application: Application) : AndroidViewModel(application) 
         var current = currentContract.value
 
         current?.let {
-            if (!current!!.bounds.intersect(visibleBounds)) {
+            if (!it.bounds.intersect(visibleBounds)) {
                 invalidateCurrentContract = true
                 hasChanged = true
                 current = null
@@ -83,18 +83,14 @@ class BICMapViewModel(application: Application) : AndroidViewModel(application) 
             hasChanged = hasChanged || current != null
         }
 
-        current?.let {
-            hasCurrentContractChanged.value = hasChanged
-            if (hasChanged) {
-                currentContract.value = current!!
-            }
-        }
+        hasCurrentContractChanged.value = hasChanged
+        currentContract.value = current
     }
 
     private fun getContractFor(latLng: LatLng): BICContract? {
-        val filteredList = allContracts.value?.filter { contract -> contract.bounds.contains(latLng) }
+        val filteredList = allContracts.filter { contract -> contract.bounds.contains(latLng) }
         var rightContract: BICContract? = null
-        filteredList?.let {
+        if (filteredList.isNotEmpty()) {
             rightContract = filteredList.first()
             if (filteredList.size > 1) {
                 var minDistance: Float? = null
@@ -123,8 +119,8 @@ class BICMapViewModel(application: Application) : AndroidViewModel(application) 
             inputStream.close()
             val json = String(buffer, Charset.forName("UTF-8"))
 
-            allContracts.value = Gson().fromJson(json, object : TypeToken<ArrayList<BICContract>>() {}.type)
-            d("${allContracts.value!!.size} contracts loaded")
+            allContracts = Gson().fromJson(json, object : TypeToken<ArrayList<BICContract>>() {}.type)
+            d("${allContracts.size} contracts loaded")
         } catch (exception: IOException) {
             e("fail to load contracts from assets", exception)
         }
