@@ -23,6 +23,8 @@ import android.arch.lifecycle.ViewModelProviders
 import android.location.Location
 import android.os.Bundle
 import android.support.design.widget.Snackbar
+import android.support.v4.content.ContextCompat
+import android.widget.TextView
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -31,10 +33,12 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.maps.android.clustering.ClusterManager
 import com.sebastienbalard.bicycle.R
-import com.sebastienbalard.bicycle.extensions.*
+import com.sebastienbalard.bicycle.extensions.getIntentForApplicationSettings
+import com.sebastienbalard.bicycle.extensions.hasPermissions
+import com.sebastienbalard.bicycle.extensions.processPermissionsResults
+import com.sebastienbalard.bicycle.extensions.requestLocationPermissionsIfNeeded
 import com.sebastienbalard.bicycle.misc.NOTIFICATION_REQUEST_PERMISSION_LOCATION
 import com.sebastienbalard.bicycle.misc.SBLog
-import com.sebastienbalard.bicycle.models.BICStation
 import com.sebastienbalard.bicycle.viewmodels.BICMapViewModel
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.widget_appbar.*
@@ -53,6 +57,7 @@ class BICHomeActivity : SBActivity() {
     private var contractsAnnotations: MutableList<Marker>? = null
 
     //region Lifecycle methods
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
@@ -61,6 +66,7 @@ class BICHomeActivity : SBActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
 
         mapViewModel = ViewModelProviders.of(this).get(BICMapViewModel::class.java)
+        contractsAnnotations = mutableListOf<Marker>()
 
         initGoogleMap(savedInstanceState)
     }
@@ -69,6 +75,12 @@ class BICHomeActivity : SBActivity() {
         super.onStart()
         v("onStart")
         mapView.onStart()
+        requestLocationPermissionsIfNeeded(NOTIFICATION_REQUEST_PERMISSION_LOCATION, onGranted = {
+            mapViewModel.userLocation.observe(this, Observer { location ->
+                moveCamera(location)
+            })
+            refreshLayout()
+        })
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -84,10 +96,14 @@ class BICHomeActivity : SBActivity() {
                             refreshLayout()
                         },
                         onDenied = {
-                            Snackbar.make(toolbar, R.string.bic_messages_warning_request_location_permissions, Snackbar.LENGTH_LONG).
-                                    setAction(R.string.bic_actions_allow, {
-                                        startActivityForResult(getIntentForApplicationSettings(), NOTIFICATION_REQUEST_PERMISSION_LOCATION)
-                                    }).show()
+                            val snackbar = Snackbar.make(toolbar, R.string.bic_messages_warning_request_location_permissions, Snackbar.LENGTH_LONG)
+                            snackbar.setAction(R.string.bic_actions_allow, {
+                                startActivityForResult(getIntentForApplicationSettings(), NOTIFICATION_REQUEST_PERMISSION_LOCATION)
+                            }).setActionTextColor(ContextCompat.getColor(this, R.color.bic_color_white))
+                            snackbar.view.setBackgroundColor(ContextCompat.getColor(this, R.color.bic_color_red))
+                            val textView = snackbar.view.findViewById(android.support.design.R.id.snackbar_text) as TextView
+                            textView.setTextColor(ContextCompat.getColor(this, R.color.bic_color_white))
+                            snackbar.show()
                         })
             else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         }
@@ -122,8 +138,8 @@ class BICHomeActivity : SBActivity() {
             clusterManager?.clearItems()
             stations?.map { station ->
                 clusterManager?.addItem(BICStationAnnotation(station))
-                clusterManager?.cluster()
             }
+            clusterManager?.cluster()
         })
     }
 
@@ -151,9 +167,11 @@ class BICHomeActivity : SBActivity() {
         v("onDestroy")
         mapView.onDestroy()
     }
+
     //endregion
 
     //region Private methods
+
     private fun refreshMarkers() {
         val level = googleMap?.cameraPosition?.zoom?.toInt()
         level?.let {
@@ -201,7 +219,7 @@ class BICHomeActivity : SBActivity() {
                     }
                 }
                 run(UI) {
-                    // do this to avoid partial contracts display after activity launch
+                    // do this to avoid contracts partial display after activity launch
                     val level = googleMap?.cameraPosition?.zoom?.toInt()
                     level?.let {
                         if (it >= 10) {
@@ -236,6 +254,9 @@ class BICHomeActivity : SBActivity() {
 
             googleMap = map
             if (googleMap != null) {
+                clusterManager = ClusterManager<BICStationAnnotation>(this, googleMap!!)
+                clusterManager?.renderer = BICStationAnnotation.Renderer(this, googleMap!!, clusterManager!!)
+                googleMap!!.setOnInfoWindowClickListener(clusterManager)
                 googleMap!!.setOnMapClickListener { latLng -> v("onMapClick") }
                 googleMap!!.setOnMarkerClickListener { marker ->
                     v("onMarkerClick")
@@ -249,21 +270,11 @@ class BICHomeActivity : SBActivity() {
                 googleMap!!.uiSettings.isZoomControlsEnabled = true
                 googleMap!!.uiSettings.isMapToolbarEnabled = true
 
-                requestLocationPermissionsIfNeeded(NOTIFICATION_REQUEST_PERMISSION_LOCATION, onGranted = {
-                    mapViewModel.userLocation.observe(this, Observer { location ->
-                        moveCamera(location)
-                    })
-                    refreshLayout()
-                })
-                clusterManager = ClusterManager<BICStationAnnotation>(this, googleMap!!)
-                clusterManager?.renderer = BICStationAnnotation.Renderer(this, googleMap!!, clusterManager!!)
-                googleMap!!.setOnInfoWindowClickListener(clusterManager)
-                contractsAnnotations = mutableListOf<Marker>()
-
             } else {
                 Snackbar.make(toolbar, R.string.bic_messages_error_no_play_services_installed, Snackbar.LENGTH_LONG).show()
             }
         }
     }
+
     //endregion
 }

@@ -31,4 +31,5 @@
     <color name="bic_color_orange_light">#ffd95b</color>
     <color name="bic_color_grey_dark">#212121</color>
     <color name="bic_color_grey">#727272</color>
+    <color name="bic_color_red">#d32f2f</color>
 </resources>
