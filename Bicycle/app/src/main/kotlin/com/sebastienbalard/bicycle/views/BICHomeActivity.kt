@@ -32,6 +32,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.maps.android.clustering.ClusterManager
+import com.sebastienbalard.bicycle.BuildConfig
 import com.sebastienbalard.bicycle.R
 import com.sebastienbalard.bicycle.extensions.getIntentForApplicationSettings
 import com.sebastienbalard.bicycle.extensions.hasPermissions
@@ -46,6 +47,8 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.run
+import java.util.*
+import kotlin.concurrent.timerTask
 
 class BICHomeActivity : SBActivity() {
 
@@ -55,6 +58,7 @@ class BICHomeActivity : SBActivity() {
     private var googleMap: GoogleMap? = null
     private var clusterManager: ClusterManager<BICStationAnnotation>? = null
     private var contractsAnnotations: MutableList<Marker>? = null
+    private var timer: Timer? = null
 
     //region Lifecycle methods
 
@@ -66,7 +70,7 @@ class BICHomeActivity : SBActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
 
         mapViewModel = ViewModelProviders.of(this).get(BICMapViewModel::class.java)
-        contractsAnnotations = mutableListOf<Marker>()
+        contractsAnnotations = mutableListOf()
 
         initGoogleMap(savedInstanceState)
     }
@@ -77,10 +81,11 @@ class BICHomeActivity : SBActivity() {
         mapView.onStart()
         requestLocationPermissionsIfNeeded(NOTIFICATION_REQUEST_PERMISSION_LOCATION, onGranted = {
             mapViewModel.userLocation.observe(this, Observer { location ->
+                refreshLayout()
                 moveCamera(location)
             })
-            refreshLayout()
         })
+        startTimer()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -91,19 +96,13 @@ class BICHomeActivity : SBActivity() {
                 processPermissionsResults(permissions, grantResults,
                         onGranted = {
                             mapViewModel.userLocation.observe(this, Observer { location ->
+                                refreshLayout()
                                 moveCamera(location)
                             })
-                            refreshLayout()
                         },
                         onDenied = {
-                            val snackbar = Snackbar.make(toolbar, R.string.bic_messages_warning_request_location_permissions, Snackbar.LENGTH_LONG)
-                            snackbar.setAction(R.string.bic_actions_allow, {
-                                startActivityForResult(getIntentForApplicationSettings(), NOTIFICATION_REQUEST_PERMISSION_LOCATION)
-                            }).setActionTextColor(ContextCompat.getColor(this, R.color.bic_color_white))
-                            snackbar.view.setBackgroundColor(ContextCompat.getColor(this, R.color.bic_color_red))
-                            val textView = snackbar.view.findViewById(android.support.design.R.id.snackbar_text) as TextView
-                            textView.setTextColor(ContextCompat.getColor(this, R.color.bic_color_white))
-                            snackbar.show()
+                            refreshLayout()
+                            showWarningForLocationPermission()
                         })
             else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         }
@@ -125,13 +124,13 @@ class BICHomeActivity : SBActivity() {
         mapViewModel.currentContract.observe(this, Observer { contract ->
             if (contract == null) {
                 d("current bounds is out of contracts covers")
-                //stopTimer()
+                stopTimer()
             } else {
-                //stopTimer()
+                stopTimer()
                 d("refresh contract stations: ${contract.name} (${contract.provider.tag})")
                 // refresh current contract stations data
                 mapViewModel.loadCurrentContractStations()
-                //startTimer()
+                startTimer()
             }
         })
         mapViewModel.currentStations.observe(this, Observer { stations ->
@@ -154,6 +153,7 @@ class BICHomeActivity : SBActivity() {
         super.onStop()
         v("onStop")
         mapView.onStop()
+        stopTimer()
     }
 
     override fun onLowMemory() {
@@ -172,6 +172,40 @@ class BICHomeActivity : SBActivity() {
 
     //region Private methods
 
+    private fun showWarningForLocationPermission() {
+        val snackbar = Snackbar.make(toolbar, R.string.bic_messages_warning_request_location_permissions, Snackbar.LENGTH_LONG)
+        snackbar.setAction(R.string.bic_actions_allow, {
+            startActivityForResult(getIntentForApplicationSettings(), NOTIFICATION_REQUEST_PERMISSION_LOCATION)
+        }).setActionTextColor(ContextCompat.getColor(this, R.color.bic_color_white))
+        snackbar.view.setBackgroundColor(ContextCompat.getColor(this, R.color.bic_color_red))
+        val textView = snackbar.view.findViewById(android.support.design.R.id.snackbar_text) as TextView
+        textView.setTextColor(ContextCompat.getColor(this, R.color.bic_color_white))
+        snackbar.show()
+    }
+
+    private fun startTimer() {
+        val zoomLevel = googleMap?.cameraPosition?.zoom?.toInt()
+        if (timer == null && mapViewModel.currentContract.value != null && zoomLevel != null && zoomLevel >= 10) {
+            val delay = BuildConfig.TIME_BEFORE_REFRESH_STATIONS_DATA_IN_SECONDS * 1000
+            d("start timer")
+            timer = Timer()
+            timer!!.scheduleAtFixedRate(timerTask {
+                d("timer fired")
+                mapViewModel.currentContract.value?.let {
+                    mapViewModel.refreshContractStations(it)
+                }
+            }, delay, delay)
+        }
+    }
+
+    private fun stopTimer() {
+        timer?.let {
+            d("stop timer")
+            it.cancel()
+            timer = null
+        }
+    }
+
     private fun refreshMarkers() {
         val level = googleMap?.cameraPosition?.zoom?.toInt()
         level?.let {
@@ -181,7 +215,7 @@ class BICHomeActivity : SBActivity() {
                 mapViewModel.determineCurrentContract(googleMap!!.projection.visibleRegion.latLngBounds)
             } else {
                 mapViewModel.currentContract.value = null
-                //stopTimer()
+                stopTimer()
                 createContractsAnnotations()
             }
         }
@@ -268,7 +302,7 @@ class BICHomeActivity : SBActivity() {
                 }
                 googleMap!!.uiSettings.isCompassEnabled = true
                 googleMap!!.uiSettings.isZoomControlsEnabled = true
-                googleMap!!.uiSettings.isMapToolbarEnabled = true
+                googleMap!!.uiSettings.isMapToolbarEnabled = false
 
             } else {
                 Snackbar.make(toolbar, R.string.bic_messages_error_no_play_services_installed, Snackbar.LENGTH_LONG).show()

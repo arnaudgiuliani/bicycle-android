@@ -53,15 +53,19 @@ class BICMapViewModel(application: Application) : AndroidViewModel(application) 
         if (cacheStations.containsKey(currentContract.value!!.name)) {
             currentStations.value = cacheStations.getValue(currentContract.value!!.name)
         } else {
-            WSFacade.getStationsByContract(currentContract.value!!, success = {
-                it?.let {
-                    cacheStations.set(currentContract.value!!.name, it)
-                    currentStations.value = it
-                }
-            }, failure = {
-                currentStations.value = null
-            })
+            refreshContractStations(currentContract.value!!)
         }
+    }
+
+    fun refreshContractStations(contract: BICContract) {
+        WSFacade.getStationsByContract(contract, success = {
+            it?.let {
+                cacheStations.set(contract.name, it)
+                currentStations.value = it
+            }
+        }, failure = {
+            currentStations.value = null
+        })
     }
 
     fun determineCurrentContract(visibleBounds: LatLngBounds) {
@@ -84,7 +88,15 @@ class BICMapViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         hasCurrentContractChanged.value = hasChanged
-        currentContract.value = current
+        if (currentContract.value != null && current != null) {
+            if (!currentContract.value!!.equals(current!!)) {
+                // current has changed
+                currentContract.value = current
+            }
+        } else {
+            // someone is null
+            currentContract.value = current
+        }
     }
 
     private fun getContractFor(latLng: LatLng): BICContract? {
