@@ -18,9 +18,13 @@
     <string name="app_name">Bicycle</string>
     <!-- actions -->
     <string name="bic_actions_allow">Autoriser</string>
+    <string name="bic_actions_search">Rechercher</string>
+    <string name="bic_actions_favorites">Mes trajets favoris</string>
+    <string name="bic_actions_about">À propos</string>
     <!-- messages -->
     <string name="bic_messages_error_no_play_services_installed">Merci de vérifier que les Google Play Services sont
         bien installés sur votre appareil</string>
     <string name="bic_messages_warning_request_location_permissions">L\'application fonctionnera en mode dégradé si
         vous ne lui permettez pas d\'accéder à votre position</string>
+    <string name="bic_messages_available_soon">Bientôt disponible</string>
 </resources>

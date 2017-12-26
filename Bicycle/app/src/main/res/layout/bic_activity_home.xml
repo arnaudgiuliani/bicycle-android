@@ -21,7 +21,7 @@
     android:layout_height="match_parent"
     tools:context="com.sebastienbalard.bicycle.views.BICHomeActivity">
 
-    <include layout="@layout/widget_appbar" />
+    <include layout="@layout/bic_widget_appbar" />
 
     <com.google.android.gms.maps.MapView
         android:id="@+id/mapView"

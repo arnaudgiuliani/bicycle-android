@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package com.sebastienbalard.bicycle.views
+package com.sebastienbalard.bicycle.extensions
 
-import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import android.content.Context
+import android.support.v4.content.ContextCompat
+import android.widget.TextView
+import android.widget.Toast
 import com.sebastienbalard.bicycle.R
-import com.sebastienbalard.bicycle.misc.SBLog
-import kotlinx.android.synthetic.main.bic_widget_appbar.*
 
-open class SBActivity : AppCompatActivity() {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        //overridePendingTransition(0,0)
-    }
+fun Toast.showAsError(into: Context) {
+    view.setBackgroundColor(ContextCompat.getColor(into, R.color.bic_color_red))
+    val textView = view.findViewById(android.R.id.message) as TextView
+    textView.setTextColor(ContextCompat.getColor(into, R.color.bic_color_white))
+    show()
 }

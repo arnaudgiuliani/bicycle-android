@@ -24,6 +24,8 @@ import android.location.Location
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.TextView
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -34,21 +36,21 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.google.maps.android.clustering.ClusterManager
 import com.sebastienbalard.bicycle.BuildConfig
 import com.sebastienbalard.bicycle.R
-import com.sebastienbalard.bicycle.extensions.getIntentForApplicationSettings
-import com.sebastienbalard.bicycle.extensions.hasPermissions
-import com.sebastienbalard.bicycle.extensions.processPermissionsResults
-import com.sebastienbalard.bicycle.extensions.requestLocationPermissionsIfNeeded
 import com.sebastienbalard.bicycle.misc.NOTIFICATION_REQUEST_PERMISSION_LOCATION
 import com.sebastienbalard.bicycle.misc.SBLog
 import com.sebastienbalard.bicycle.viewmodels.BICMapViewModel
-import kotlinx.android.synthetic.main.activity_home.*
-import kotlinx.android.synthetic.main.widget_appbar.*
+import kotlinx.android.synthetic.main.bic_activity_home.*
+import kotlinx.android.synthetic.main.bic_widget_appbar.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.run
 import java.util.*
 import kotlin.concurrent.timerTask
+import android.content.Intent.getIntent
+import android.widget.Toast
+import com.sebastienbalard.bicycle.extensions.*
+
 
 class BICHomeActivity : SBActivity() {
 
@@ -64,7 +66,7 @@ class BICHomeActivity : SBActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_home)
+        setContentView(R.layout.bic_activity_home)
         v("onCreate")
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
@@ -105,6 +107,33 @@ class BICHomeActivity : SBActivity() {
                             showWarningForLocationPermission()
                         })
             else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        v("onCreateOptionsMenu")
+        menuInflater.inflate(R.menu.bic_menu_home, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        return when (item?.itemId) {
+            R.id.bic_menu_home_item_search -> {
+                i("click on menu item: search")
+                Toast.makeText(this, R.string.bic_messages_available_soon, Toast.LENGTH_LONG).showAsError(this)
+                true
+            }
+            R.id.bic_menu_home_item_favorites -> {
+                i("click on menu item: favorites")
+                Toast.makeText(this, R.string.bic_messages_available_soon, Toast.LENGTH_LONG).showAsError(this)
+                true
+            }
+            R.id.bic_menu_home_item_about -> {
+                i("click on menu item: about")
+                Toast.makeText(this, R.string.bic_messages_available_soon, Toast.LENGTH_LONG).showAsError(this)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
         }
     }
 

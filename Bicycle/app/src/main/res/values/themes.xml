@@ -15,7 +15,7 @@
     limitations under the License.
 -->
 <resources>
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light">
         <item name="colorPrimary">@color/bic_color_primary</item>
         <item name="colorPrimaryDark">@color/bic_color_primary_dark</item>
         <item name="colorAccent">@color/bic_color_accent</item>
@@ -32,14 +32,15 @@
     <style name="AppTheme.AppBar" parent="Theme.AppCompat.Light">
         <item name="colorPrimary">@color/bic_color_primary</item>
         <item name="android:textColorPrimary">@color/bic_color_white</item>
+        <item name="android:textColorSecondary">@color/bic_color_white</item>
         <item name="actionMenuTextColor">@color/bic_color_white</item>
         <item name="popupTheme">@style/AppTheme.Popup</item>
     </style>
 
     <style name="AppTheme.Popup" parent="@style/ThemeOverlay.AppCompat.Light"/>
 
-    <style name="SQTheme.PopupMenu" parent="@style/Widget.AppCompat.PopupMenu">
+    <!--<style name="AppTheme.PopupMenu" parent="@style/Widget.AppCompat.PopupMenu">
         <item name="android:dropDownHorizontalOffset">-24dp</item>
         <item name="android:dropDownVerticalOffset">4dp</item>
-    </style>
+    </style>-->
 </resources>
