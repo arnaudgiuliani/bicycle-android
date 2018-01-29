@@ -60,10 +60,11 @@ class BICMapViewModel(application: Application) : AndroidViewModel(application) 
     fun refreshContractStations(contract: BICContract) {
         WSFacade.getStationsByContract(contract, success = {
             it?.let {
-                cacheStations.set(contract.name, it)
+                cacheStations[contract.name] = it
                 currentStations.value = it
             }
         }, failure = {
+            e("fail to get contract stations", it)
             currentStations.value = null
         })
     }

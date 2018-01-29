@@ -20,25 +20,30 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
+import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
+import android.support.design.widget.CoordinatorLayout
 import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.maps.android.clustering.ClusterManager
 import com.sebastienbalard.bicycle.BuildConfig
 import com.sebastienbalard.bicycle.R
+import com.sebastienbalard.bicycle.extensions.*
 import com.sebastienbalard.bicycle.misc.NOTIFICATION_REQUEST_PERMISSION_LOCATION
 import com.sebastienbalard.bicycle.misc.SBLog
 import com.sebastienbalard.bicycle.viewmodels.BICMapViewModel
+import com.sebastienbalard.bicycle.viewmodels.BICSearchViewModel
 import kotlinx.android.synthetic.main.bic_activity_home.*
 import kotlinx.android.synthetic.main.bic_widget_appbar.*
 import kotlinx.coroutines.experimental.CommonPool
@@ -47,9 +52,6 @@ import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.run
 import java.util.*
 import kotlin.concurrent.timerTask
-import android.content.Intent.getIntent
-import android.widget.Toast
-import com.sebastienbalard.bicycle.extensions.*
 
 
 class BICHomeActivity : SBActivity() {
@@ -57,10 +59,12 @@ class BICHomeActivity : SBActivity() {
     companion object : SBLog()
 
     private lateinit var mapViewModel: BICMapViewModel
+    private lateinit var searchViewModel: BICSearchViewModel
     private var googleMap: GoogleMap? = null
     private var clusterManager: ClusterManager<BICStationAnnotation>? = null
     private var contractsAnnotations: MutableList<Marker>? = null
     private var timer: Timer? = null
+    private var menuItemSearch: MenuItem? = null
 
     //region Lifecycle methods
 
@@ -72,9 +76,35 @@ class BICHomeActivity : SBActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
 
         mapViewModel = ViewModelProviders.of(this).get(BICMapViewModel::class.java)
+        searchViewModel = ViewModelProviders.of(this).get(BICSearchViewModel::class.java)
         contractsAnnotations = mutableListOf()
 
         initGoogleMap(savedInstanceState)
+
+        //layoutSearch.animate().translationYBy(0f).translationY(layoutSearch.measuredHeight.toFloat() * -1).start()
+
+        autoCompleteTextViewDepartureAddress.setAdapter(BICPlacesAutoCompleteAdapter(this))
+        autoCompleteTextViewDepartureAddress.setOnItemClickListener { _, _, _, _ -> editTextDepartureBikesCount.requestFocus() }
+        editTextDepartureBikesCount.append("1")
+        autoCompleteTextViewArrivalAddress.setAdapter(BICPlacesAutoCompleteAdapter(this))
+        autoCompleteTextViewArrivalAddress.setOnItemClickListener { _, _, _, _ -> editTextArrivalFreeSlotsCount.requestFocus() }
+        editTextArrivalFreeSlotsCount.append("1")
+
+        buttonLocalizeDeparture.setOnClickListener {
+            mapViewModel.userLocation.value?.let {
+                autoCompleteTextViewDepartureAddress.text.clear()
+                autoCompleteTextViewDepartureAddress.setText(geocode(it.latitude, it.longitude))
+                editTextDepartureBikesCount.requestFocus()
+            }
+        }
+        buttonLocalizeArrival.setOnClickListener {
+            mapViewModel.userLocation.value?.let {
+                autoCompleteTextViewArrivalAddress.text.clear()
+                autoCompleteTextViewArrivalAddress.setText(geocode(it.latitude, it.longitude))
+                editTextArrivalFreeSlotsCount.requestFocus()
+            }
+        }
+        buttonSearch.setOnClickListener { hideLayoutSearch() }
     }
 
     override fun onStart() {
@@ -113,6 +143,7 @@ class BICHomeActivity : SBActivity() {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         v("onCreateOptionsMenu")
         menuInflater.inflate(R.menu.bic_menu_home, menu)
+        menuItemSearch = menu?.findItem(R.id.bic_menu_home_item_search)
         return super.onCreateOptionsMenu(menu)
     }
 
@@ -120,7 +151,7 @@ class BICHomeActivity : SBActivity() {
         return when (item?.itemId) {
             R.id.bic_menu_home_item_search -> {
                 i("click on menu item: search")
-                Toast.makeText(this, R.string.bic_messages_available_soon, Toast.LENGTH_LONG).showAsError(this)
+                showLayoutSearch()
                 true
             }
             R.id.bic_menu_home_item_favorites -> {
@@ -167,6 +198,9 @@ class BICHomeActivity : SBActivity() {
             stations?.map { station ->
                 clusterManager?.addItem(BICStationAnnotation(station))
             }
+            if (stations ==  null) {
+                showErrorForCurrentContractStation()
+            }
             clusterManager?.cluster()
         })
     }
@@ -200,6 +234,46 @@ class BICHomeActivity : SBActivity() {
     //endregion
 
     //region Private methods
+
+    private fun geocode(latitude: Double, longitude: Double): String? {
+        val geocoder = Geocoder(this, Locale.getDefault())
+        val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+        if (addresses.size > 0) {
+            return addresses[0].getAddressLine(0)
+        }
+        return null
+    }
+
+    private fun hideLayoutSearch() {
+        val params = layoutSearch.layoutParams as CoordinatorLayout.LayoutParams
+        params.topMargin -= layoutSearch.measuredHeight
+        layoutSearch.layoutParams = params
+        menuItemSearch?.isVisible = true
+        hideSoftInput()
+    }
+
+    private fun showLayoutSearch() {
+        menuItemSearch?.isVisible = false
+        /*val animate = TranslateAnimation(
+                0f,
+                0f,
+                0f,
+                layoutSearch.measuredHeight.toFloat())
+        animate.duration = 400
+        animate.fillAfter = true
+        layoutSearch.startAnimation(animate)*/
+        val params = layoutSearch.layoutParams as CoordinatorLayout.LayoutParams
+        params.topMargin += layoutSearch.measuredHeight
+        layoutSearch.layoutParams = params
+    }
+
+    private fun showErrorForCurrentContractStation() {
+        val snackbar = Snackbar.make(toolbar, R.string.bic_messages_warning_get_current_contract_stations, Snackbar.LENGTH_LONG)
+        snackbar.view.setBackgroundColor(ContextCompat.getColor(this, R.color.bic_color_red))
+        val textView = snackbar.view.findViewById(android.support.design.R.id.snackbar_text) as TextView
+        textView.setTextColor(ContextCompat.getColor(this, R.color.bic_color_white))
+        snackbar.show()
+    }
 
     private fun showWarningForLocationPermission() {
         val snackbar = Snackbar.make(toolbar, R.string.bic_messages_warning_request_location_permissions, Snackbar.LENGTH_LONG)
@@ -247,6 +321,8 @@ class BICHomeActivity : SBActivity() {
                 stopTimer()
                 createContractsAnnotations()
             }
+            (autoCompleteTextViewDepartureAddress.adapter as BICPlacesAutoCompleteAdapter).bounds = googleMap!!.projection.visibleRegion.latLngBounds
+            (autoCompleteTextViewArrivalAddress.adapter as BICPlacesAutoCompleteAdapter).bounds = googleMap!!.projection.visibleRegion.latLngBounds
         }
     }
 
@@ -262,6 +338,8 @@ class BICHomeActivity : SBActivity() {
 
     private fun createContractsAnnotations() {
         d("create contracts annotations")
+        val size = resources.getDimensionPixelSize(R.dimen.bic_size_annotation)
+        val imageContract = getBitmapDescriptor(R.drawable.bic_img_contract, size, size)
         val hasMarkers = clusterManager?.markerCollection?.markers?.isNotEmpty()?.or(false)!!
         val hasClusterMarkers = clusterManager?.clusterMarkerCollection?.markers?.isNotEmpty()?.or(false)!!
         if (hasMarkers || hasClusterMarkers) {
@@ -274,7 +352,8 @@ class BICHomeActivity : SBActivity() {
                 mapViewModel.allContracts.map { contract ->
                     options = MarkerOptions()
                     options.position(contract.center)
-                    options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)).title(contract.name)
+                    options.icon(imageContract)
+                    options.title(contract.name)
                     run(UI) {
                         googleMap?.addMarker(options)?.let {
                             contractsAnnotations?.add(it)
@@ -304,10 +383,17 @@ class BICHomeActivity : SBActivity() {
 
     @SuppressLint("MissingPermission")
     private fun refreshLayout() {
+        val hasLocationPermissions = hasPermissions(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
         googleMap?.let {
-            val hasLocationPermissions = hasPermissions(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
             it.isMyLocationEnabled = hasLocationPermissions
             it.uiSettings.isMyLocationButtonEnabled = hasLocationPermissions
+        }
+        if (hasLocationPermissions) {
+            buttonLocalizeDeparture.visibility = View.VISIBLE
+            buttonLocalizeArrival.visibility = View.VISIBLE
+        } else {
+            buttonLocalizeDeparture.visibility = View.GONE
+            buttonLocalizeArrival.visibility = View.GONE
         }
     }
 
@@ -317,7 +403,7 @@ class BICHomeActivity : SBActivity() {
 
             googleMap = map
             if (googleMap != null) {
-                clusterManager = ClusterManager<BICStationAnnotation>(this, googleMap!!)
+                clusterManager = ClusterManager(this, googleMap!!)
                 clusterManager?.renderer = BICStationAnnotation.Renderer(this, googleMap!!, clusterManager!!)
                 googleMap!!.setOnInfoWindowClickListener(clusterManager)
                 googleMap!!.setOnMapClickListener { latLng -> v("onMapClick") }

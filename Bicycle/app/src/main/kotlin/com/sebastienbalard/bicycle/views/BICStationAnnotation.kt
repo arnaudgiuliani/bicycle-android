@@ -17,14 +17,19 @@
 package com.sebastienbalard.bicycle.views
 
 import android.content.Context
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.clustering.ClusterItem
-import com.sebastienbalard.bicycle.models.BICStation
-import com.google.android.gms.maps.model.MarkerOptions
-import com.google.maps.android.clustering.ClusterManager
+import android.support.v4.content.ContextCompat
+import android.support.v4.content.res.ResourcesCompat
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
+import com.google.maps.android.clustering.ClusterItem
+import com.google.maps.android.clustering.ClusterManager
 import com.google.maps.android.clustering.view.DefaultClusterRenderer
+import com.sebastienbalard.bicycle.R
+import com.sebastienbalard.bicycle.extensions.drawOn
+import com.sebastienbalard.bicycle.extensions.getBitmap
+import com.sebastienbalard.bicycle.models.BICStation
 
 
 open class BICStationAnnotation(val station: BICStation) : ClusterItem {
@@ -33,13 +38,27 @@ open class BICStationAnnotation(val station: BICStation) : ClusterItem {
         return station.location
     }
 
-    open class Renderer(private val mContext: Context,
+    open class Renderer(context: Context,
                          map: GoogleMap,
-                         clusterManager: ClusterManager<BICStationAnnotation>) : DefaultClusterRenderer<BICStationAnnotation>(mContext, map, clusterManager) {
+                         clusterManager: ClusterManager<BICStationAnnotation>) : DefaultClusterRenderer<BICStationAnnotation>(context, map, clusterManager) {
+
+        private val size = context.resources.getDimensionPixelSize(R.dimen.bic_size_annotation)
+        private val textSize = context.resources.getDimensionPixelSize(R.dimen.bic_size_font_body)
+        private val imageStation = context.getBitmap(R.drawable.bic_img_station, size, size)
+        private val colorWhite = ContextCompat.getColor(context, R.color.bic_color_white)
 
         override fun onBeforeClusterItemRendered(item: BICStationAnnotation?,
                                                  markerOptions: MarkerOptions?) {
-            markerOptions!!.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)).title(item?.station?.name)
+
+            var icon = imageStation
+            item?.station?.availableBikesCount?.let {
+                icon = imageStation.drawOn(it.toString(), colorWhite, textSize.toFloat(), 3.75f)
+            }
+            item?.station?.freeStandsCount?.let {
+                icon = icon.drawOn(it.toString(), colorWhite, textSize.toFloat(), 1.65f)
+            }
+
+            markerOptions!!.icon(BitmapDescriptorFactory.fromBitmap(icon)).title(item?.station?.name)
         }
     }
 }

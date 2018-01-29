@@ -16,4 +16,8 @@
 -->
 <resources>
 
+    <style name="AppTheme.Widget.Button.Borderless" parent="@style/Widget.AppCompat.Button.Borderless">
+        <item name="android:padding">4dp</item>
+    </style>
+
 </resources>

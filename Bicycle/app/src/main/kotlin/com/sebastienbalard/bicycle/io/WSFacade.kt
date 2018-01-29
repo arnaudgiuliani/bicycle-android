@@ -27,14 +27,21 @@ import retrofit2.Response
 class WSFacade {
 
     companion object: SBLog() {
+
         fun getStationsByContract(contract: BICContract, success: (List<BICStation>?) -> Unit, failure: (Throwable?) -> Unit) {
             val contractName = contract.url.substring(contract.url.lastIndexOf('/') + 1)
             d("contract endpoint: $contractName")
             CityBikesApi.instance.getStations(contractName).enqueue(object : Callback<CBContractResponseDto> {
 
                 override fun onResponse(call: Call<CBContractResponseDto>?, response: Response<CBContractResponseDto>?) {
-                    response?.body()?.let {
-                        success(it.network.stations)
+                    response?.let {
+                        if (it.isSuccessful) {
+                            it.body()?.let {
+                                success(it.network.stations)
+                            }
+                        } else {
+                            failure(RuntimeException("network error - code ${it.code()}"))
+                        }
                     }
                 }
 

@@ -61,6 +61,10 @@ abstract class SBLog {
         if (logger.isErrorEnabled) logger.error(msg, exception)
     }
 
+    fun e(msg: String, exception: Throwable?) {
+        if (logger.isErrorEnabled) logger.error(msg, exception)
+    }
+
     /*inline fun e(msg: () -> String) {
         if (logger.isErrorEnabled) logger.error(msg())
     }*/

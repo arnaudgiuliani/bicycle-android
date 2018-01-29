@@ -18,8 +18,11 @@ package com.sebastienbalard.bicycle.extensions
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context
 import android.content.pm.PackageManager
 import android.support.v4.app.ActivityCompat
+import android.view.inputmethod.InputMethodManager
+
 
 fun Activity.requestLocationPermissionsIfNeeded(requestCode: Int, onGranted: () -> Unit) {
     requestPermissionsIfNeeded(requestCode,
@@ -56,4 +59,11 @@ fun Activity.hasPermissions(vararg permissions: String): Boolean {
             .filterNot { ActivityCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED }
             .toTypedArray()
     return toRequest.isEmpty()
+}
+
+fun Activity.hideSoftInput() {
+    val vImm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+    if (vImm.isActive) {
+        vImm.hideSoftInputFromWindow(currentFocus.windowToken, 0)
+    }
 }

@@ -19,6 +19,7 @@
     <dimen name="bic_margin_activity_horizontal">16dp</dimen>
     <dimen name="bic_margin_activity_vertical">16dp</dimen>
     <dimen name="bic_margin_fab">16dp</dimen>
+    <dimen name="bic_size_annotation">64dp</dimen>
     <!-- text sizes -->
     <dimen name="bic_size_font_headline">24sp</dimen>
     <dimen name="bic_size_font_subhead">17sp</dimen>

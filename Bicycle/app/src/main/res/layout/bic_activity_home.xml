@@ -21,12 +21,128 @@
     android:layout_height="match_parent"
     tools:context="com.sebastienbalard.bicycle.views.BICHomeActivity">
 
-    <include layout="@layout/bic_widget_appbar" />
-
     <com.google.android.gms.maps.MapView
         android:id="@+id/mapView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+    <LinearLayout
+        android:id="@+id/layoutSearch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="-200dp"
+        android:background="@color/bic_color_primary"
+        android:orientation="vertical"
+        android:paddingBottom="@dimen/bic_margin_activity_vertical"
+        android:paddingEnd="@dimen/bic_margin_activity_horizontal"
+        android:paddingStart="@dimen/bic_margin_activity_horizontal"
+        android:paddingTop="@dimen/bic_margin_activity_vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:textColorHint="@color/bic_color_white">
+
+                <android.support.v7.widget.AppCompatAutoCompleteTextView
+                    android:id="@+id/autoCompleteTextViewDepartureAddress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Adresse de départ"
+                    android:gravity="center_vertical"
+                    android:textColor="@color/bic_color_white"
+                    android:singleLine="true"
+                    android:inputType="textCapSentences"
+                    android:imeOptions="actionNext"/>
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.v7.widget.AppCompatImageButton
+                android:id="@+id/buttonLocalizeDeparture"
+                style="@style/AppTheme.Widget.Button.Borderless"
+                android:layout_width="36dp"
+                android:layout_height="match_parent"
+                android:src="@drawable/bic_ic_location_24dp"
+                android:tint="@color/bic_color_white" />
+
+            <android.support.v7.widget.AppCompatEditText
+                android:id="@+id/editTextDepartureBikesCount"
+                android:layout_width="80dp"
+                android:layout_height="match_parent"
+                android:paddingTop="@dimen/bic_margin_activity_vertical"
+                android:layout_marginStart="@dimen/bic_margin_activity_horizontal"
+                android:drawableStart="@drawable/bic_ic_bike_24dp"
+                android:drawableTint="@color/bic_color_white"
+                android:textColor="@color/bic_color_white"
+                android:maxLength="2"
+                android:inputType="number"
+                android:gravity="center_vertical|end"
+                android:imeOptions="actionNext"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:textColorHint="@color/bic_color_white">
+
+                <android.support.v7.widget.AppCompatAutoCompleteTextView
+                    android:id="@+id/autoCompleteTextViewArrivalAddress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Adresse d'arrivée"
+                    android:gravity="center_vertical"
+                    android:textColor="@color/bic_color_white"
+                    android:singleLine="true"
+                    android:inputType="textCapSentences"
+                    android:imeOptions="actionNext" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.v7.widget.AppCompatImageButton
+                android:id="@+id/buttonLocalizeArrival"
+                style="@style/AppTheme.Widget.Button.Borderless"
+                android:layout_width="36dp"
+                android:layout_height="match_parent"
+                android:src="@drawable/bic_ic_location_24dp"
+                android:tint="@color/bic_color_white" />
+
+            <android.support.v7.widget.AppCompatEditText
+                android:id="@+id/editTextArrivalFreeSlotsCount"
+                android:layout_width="80dp"
+                android:layout_height="match_parent"
+                android:paddingTop="@dimen/bic_margin_activity_vertical"
+                android:layout_marginStart="@dimen/bic_margin_activity_horizontal"
+                android:drawableStart="@drawable/bic_ic_free_slot_24dp"
+                android:drawableTint="@color/bic_color_white"
+                android:textColor="@color/bic_color_white"
+                android:maxLength="2"
+                android:inputType="number"
+                android:gravity="center_vertical|end"
+                android:imeOptions="actionDone"/>
+        </LinearLayout>
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/buttonSearch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/bic_margin_activity_vertical"
+            android:text="Rechercher"
+            android:textColor="@color/bic_color_white"
+            android:background="@color/bic_color_accent"/>
+
+    </LinearLayout>
+
+    <include layout="@layout/bic_widget_appbar" />
 
 </android.support.design.widget.CoordinatorLayout>
