@@ -51,7 +51,7 @@
                 android:layout_weight="1"
                 android:textColorHint="@color/bic_color_white">
 
-                <android.support.v7.widget.AppCompatAutoCompleteTextView
+                <com.sebastienbalard.bicycle.widgets.SBClearableAutoCompleteView
                     android:id="@+id/autoCompleteTextViewDepartureAddress"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -59,7 +59,7 @@
                     android:gravity="center_vertical"
                     android:textColor="@color/bic_color_white"
                     android:singleLine="true"
-                    android:inputType="textCapSentences"
+                    android:inputType="textCapSentences|textPostalAddress"
                     android:imeOptions="actionNext"/>
             </android.support.design.widget.TextInputLayout>
 
@@ -78,7 +78,6 @@
                 android:paddingTop="@dimen/bic_margin_activity_vertical"
                 android:layout_marginStart="@dimen/bic_margin_activity_horizontal"
                 android:drawableStart="@drawable/bic_ic_bike_24dp"
-                android:drawableTint="@color/bic_color_white"
                 android:textColor="@color/bic_color_white"
                 android:maxLength="2"
                 android:inputType="number"
@@ -97,7 +96,7 @@
                 android:layout_weight="1"
                 android:textColorHint="@color/bic_color_white">
 
-                <android.support.v7.widget.AppCompatAutoCompleteTextView
+                <com.sebastienbalard.bicycle.widgets.SBClearableAutoCompleteView
                     android:id="@+id/autoCompleteTextViewArrivalAddress"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -105,7 +104,7 @@
                     android:gravity="center_vertical"
                     android:textColor="@color/bic_color_white"
                     android:singleLine="true"
-                    android:inputType="textCapSentences"
+                    android:inputType="textCapSentences|textPostalAddress"
                     android:imeOptions="actionNext" />
             </android.support.design.widget.TextInputLayout>
 
@@ -124,7 +123,6 @@
                 android:paddingTop="@dimen/bic_margin_activity_vertical"
                 android:layout_marginStart="@dimen/bic_margin_activity_horizontal"
                 android:drawableStart="@drawable/bic_ic_free_slot_24dp"
-                android:drawableTint="@color/bic_color_white"
                 android:textColor="@color/bic_color_white"
                 android:maxLength="2"
                 android:inputType="number"
@@ -138,6 +136,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/bic_margin_activity_vertical"
             android:text="Rechercher"
+            android:enabled="false"
             android:textColor="@color/bic_color_white"
             android:background="@color/bic_color_accent"/>
 

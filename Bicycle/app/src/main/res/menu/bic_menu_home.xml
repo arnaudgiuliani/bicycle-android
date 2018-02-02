@@ -21,7 +21,6 @@
         android:orderInCategory="101"
         android:title="@string/bic_actions_search"
         app:showAsAction="ifRoom|withText"
-        app:iconTint="@color/bic_color_white"
         android:icon="@drawable/bic_ic_search_24dp"/>
 
     <item

@@ -16,13 +16,14 @@
 
 package com.sebastienbalard.bicycle.models
 
+import android.location.Location
 import com.google.android.gms.maps.model.LatLng
-import com.google.gson.annotations.SerializedName
 
-data class BICPlace(val name: String,
-                    val latitude: Double,
-                    val longitude: Double,
-                    val contract: BICContract) {
+data class BICPlace(val latitude: Double,
+                    val longitude: Double) {
+
+    constructor(latLng: LatLng) : this(latLng.latitude, latLng.longitude)
+    constructor(location: Location) : this(location.latitude, location.longitude)
 
     val location: LatLng
         get() = LatLng(latitude, longitude)

@@ -20,7 +20,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
-import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
 import android.support.design.widget.CoordinatorLayout
@@ -42,8 +41,10 @@ import com.sebastienbalard.bicycle.R
 import com.sebastienbalard.bicycle.extensions.*
 import com.sebastienbalard.bicycle.misc.NOTIFICATION_REQUEST_PERMISSION_LOCATION
 import com.sebastienbalard.bicycle.misc.SBLog
+import com.sebastienbalard.bicycle.models.BICPlace
 import com.sebastienbalard.bicycle.viewmodels.BICMapViewModel
 import com.sebastienbalard.bicycle.viewmodels.BICSearchViewModel
+import com.sebastienbalard.bicycle.widgets.SBClearableAutoCompleteView
 import kotlinx.android.synthetic.main.bic_activity_home.*
 import kotlinx.android.synthetic.main.bic_widget_appbar.*
 import kotlinx.coroutines.experimental.CommonPool
@@ -80,31 +81,9 @@ class BICHomeActivity : SBActivity() {
         contractsAnnotations = mutableListOf()
 
         initGoogleMap(savedInstanceState)
+        initSearchView()
 
         //layoutSearch.animate().translationYBy(0f).translationY(layoutSearch.measuredHeight.toFloat() * -1).start()
-
-        autoCompleteTextViewDepartureAddress.setAdapter(BICPlacesAutoCompleteAdapter(this))
-        autoCompleteTextViewDepartureAddress.setOnItemClickListener { _, _, _, _ -> editTextDepartureBikesCount.requestFocus() }
-        editTextDepartureBikesCount.append("1")
-        autoCompleteTextViewArrivalAddress.setAdapter(BICPlacesAutoCompleteAdapter(this))
-        autoCompleteTextViewArrivalAddress.setOnItemClickListener { _, _, _, _ -> editTextArrivalFreeSlotsCount.requestFocus() }
-        editTextArrivalFreeSlotsCount.append("1")
-
-        buttonLocalizeDeparture.setOnClickListener {
-            mapViewModel.userLocation.value?.let {
-                autoCompleteTextViewDepartureAddress.text.clear()
-                autoCompleteTextViewDepartureAddress.setText(geocode(it.latitude, it.longitude))
-                editTextDepartureBikesCount.requestFocus()
-            }
-        }
-        buttonLocalizeArrival.setOnClickListener {
-            mapViewModel.userLocation.value?.let {
-                autoCompleteTextViewArrivalAddress.text.clear()
-                autoCompleteTextViewArrivalAddress.setText(geocode(it.latitude, it.longitude))
-                editTextArrivalFreeSlotsCount.requestFocus()
-            }
-        }
-        buttonSearch.setOnClickListener { hideLayoutSearch() }
     }
 
     override fun onStart() {
@@ -203,6 +182,11 @@ class BICHomeActivity : SBActivity() {
             }
             clusterManager?.cluster()
         })
+        searchViewModel.isSearchButtonEnabled.observe(this, Observer { enabled ->
+            enabled?.let {
+                buttonSearch.isEnabled = it
+            }
+        })
     }
 
     override fun onPause() {
@@ -235,15 +219,6 @@ class BICHomeActivity : SBActivity() {
 
     //region Private methods
 
-    private fun geocode(latitude: Double, longitude: Double): String? {
-        val geocoder = Geocoder(this, Locale.getDefault())
-        val addresses = geocoder.getFromLocation(latitude, longitude, 1)
-        if (addresses.size > 0) {
-            return addresses[0].getAddressLine(0)
-        }
-        return null
-    }
-
     private fun hideLayoutSearch() {
         val params = layoutSearch.layoutParams as CoordinatorLayout.LayoutParams
         params.topMargin -= layoutSearch.measuredHeight
@@ -265,6 +240,7 @@ class BICHomeActivity : SBActivity() {
         val params = layoutSearch.layoutParams as CoordinatorLayout.LayoutParams
         params.topMargin += layoutSearch.measuredHeight
         layoutSearch.layoutParams = params
+        showSoftInput()
     }
 
     private fun showErrorForCurrentContractStation() {
@@ -394,6 +370,95 @@ class BICHomeActivity : SBActivity() {
         } else {
             buttonLocalizeDeparture.visibility = View.GONE
             buttonLocalizeArrival.visibility = View.GONE
+        }
+    }
+
+    private fun initSearchView() {
+        autoCompleteTextViewDepartureAddress.setAdapter(BICPlacesAutoCompleteAdapter(this))
+        autoCompleteTextViewDepartureAddress.setOnClearListener {
+            searchViewModel.departure = null
+        }
+        autoCompleteTextViewDepartureAddress.setOnItemClickListener { _, _, _, _ ->
+            geocode(autoCompleteTextViewDepartureAddress.text.toString().trim())?.let {
+                v("set departure place with autocompletion")
+                searchViewModel.departure = BICPlace(it)
+                editTextDepartureBikesCount.requestFocus()
+            } ?: autoCompleteTextViewDepartureAddress.setText("")
+        }
+        buttonLocalizeDeparture.setOnClickListener {
+            mapViewModel.userLocation.value?.let {
+                autoCompleteTextViewDepartureAddress.text.clear()
+                v("set departure place with user location")
+                searchViewModel.departure = BICPlace(it)
+                autoCompleteTextViewDepartureAddress.setText(geocodeReverse(searchViewModel.departure!!.location))
+                editTextDepartureBikesCount.requestFocus()
+            }
+        }
+        editTextDepartureBikesCount.append("1")
+        editTextDepartureBikesCount.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                v("set bikes count")
+                var count = 1
+                val text = editTextDepartureBikesCount.text.toString().trim()
+                if (!text.isEmpty()) {
+                    val input = text.toInt()
+                    if (input > 0) {
+                        count = input
+                    } else {
+                        editTextDepartureBikesCount.setText("")
+                        editTextDepartureBikesCount.append("1")
+                    }
+                } else {
+                    editTextDepartureBikesCount.setText("")
+                    editTextDepartureBikesCount.append("1")
+                }
+                searchViewModel.bikesCount = count
+            }
+        }
+        autoCompleteTextViewArrivalAddress.setAdapter(BICPlacesAutoCompleteAdapter(this))
+        autoCompleteTextViewArrivalAddress.setOnClearListener {
+            searchViewModel.arrival = null
+        }
+        autoCompleteTextViewArrivalAddress.setOnItemClickListener { _, _, _, _ ->
+            geocode(autoCompleteTextViewArrivalAddress.text.toString().trim())?.let {
+                v("set arrival place with autocompletion")
+                searchViewModel.arrival = BICPlace(it)
+                editTextArrivalFreeSlotsCount.requestFocus()
+            } ?: autoCompleteTextViewArrivalAddress.setText("")
+        }
+        buttonLocalizeArrival.setOnClickListener {
+            mapViewModel.userLocation.value?.let {
+                autoCompleteTextViewArrivalAddress.text.clear()
+                v("set arrival place with user location")
+                searchViewModel.arrival = BICPlace(it)
+                autoCompleteTextViewArrivalAddress.setText(geocodeReverse(searchViewModel.arrival!!.location))
+                editTextArrivalFreeSlotsCount.requestFocus()
+            }
+        }
+        editTextArrivalFreeSlotsCount.append("1")
+        editTextArrivalFreeSlotsCount.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                v("set free slots count")
+                var count = 1
+                val text = editTextArrivalFreeSlotsCount.text.toString().trim()
+                if (!text.isEmpty()) {
+                    val input = text.toInt()
+                    if (input > 0) {
+                        count = input
+                    } else {
+                        editTextArrivalFreeSlotsCount.setText("")
+                        editTextArrivalFreeSlotsCount.append("1")
+                    }
+                } else {
+                    editTextArrivalFreeSlotsCount.setText("")
+                    editTextArrivalFreeSlotsCount.append("1")
+                }
+                searchViewModel.freeSlotsCount = count
+            }
+        }
+        buttonSearch.setOnClickListener {
+            i("click on button: search")
+            hideLayoutSearch()
         }
     }
 

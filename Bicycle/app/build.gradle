@@ -23,7 +23,7 @@ android {
         debug {
             testCoverageEnabled false
 
-            buildConfigField("long", "TIME_BEFORE_REFRESH_STATIONS_DATA_IN_SECONDS", "30")
+            buildConfigField("long", "TIME_BEFORE_REFRESH_STATIONS_DATA_IN_SECONDS", "60")
         }
         release {
             minifyEnabled false
@@ -61,7 +61,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     // support
-    implementation "com.android.support:support-v4:$support_libs_version"
+    //implementation "com.android.support:support-v4:$support_libs_version"
     implementation "com.android.support:appcompat-v7:$support_libs_version"
     implementation "com.android.support:design:$support_libs_version"
     //implementation 'com.android.support.constraint:constraint-layout:1.0.2'

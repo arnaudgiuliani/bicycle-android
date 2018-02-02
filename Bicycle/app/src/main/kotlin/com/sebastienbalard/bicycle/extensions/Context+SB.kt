@@ -20,6 +20,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.location.Geocoder
 import android.net.Uri
 import android.os.Build
 import android.support.v4.content.ContextCompat
@@ -27,6 +28,9 @@ import android.util.DisplayMetrics
 import android.util.TypedValue
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.LatLng
+import java.io.IOException
+import java.util.*
 
 fun Context.getIntentForApplicationSettings(): Intent {
     return Intent("android.settings.APPLICATION_DETAILS_SETTINGS", Uri.parse("package:" + packageName)).
@@ -71,4 +75,28 @@ fun Context.dpToPx(dp: Int): Int {
 
 fun Context.spToPx(sp: Int): Float {
     return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp.toFloat(), resources.displayMetrics)
+}
+
+fun Context.geocodeReverse(latLng: LatLng): String? {
+    return geocodeReverse(latLng.latitude, latLng.longitude)
+}
+
+fun Context.geocodeReverse(latitude: Double, longitude: Double): String? {
+    val geocoder = Geocoder(this, Locale.getDefault())
+    val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+    if (addresses.size > 0) {
+        return addresses[0].getAddressLine(0)
+    }
+    return null
+}
+
+fun Context.geocode(address: String): LatLng? {
+    val geocoder = Geocoder(this, Locale.getDefault())
+    try {
+        val addresses = geocoder.getFromLocationName(address, 1)
+        if (addresses.size > 0) {
+            return LatLng(addresses[0].latitude, addresses[0].longitude)
+        }
+    } catch (exception: IOException) {}
+    return null
 }

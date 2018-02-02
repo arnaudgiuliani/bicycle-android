@@ -61,6 +61,11 @@ fun Activity.hasPermissions(vararg permissions: String): Boolean {
     return toRequest.isEmpty()
 }
 
+fun Activity.showSoftInput() {
+    val vImm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+    vImm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY)
+}
+
 fun Activity.hideSoftInput() {
     val vImm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
     if (vImm.isActive) {

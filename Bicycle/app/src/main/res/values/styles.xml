@@ -16,6 +16,11 @@
 -->
 <resources>
 
+    <style name="AppTheme.Widget.Button" parent="@style/Widget.AppCompat.Button">
+        <item name="android:padding">4dp</item>
+        <item name="android:backgroundTint">@color/bic_selector_button_background</item>
+    </style>
+
     <style name="AppTheme.Widget.Button.Borderless" parent="@style/Widget.AppCompat.Button.Borderless">
         <item name="android:padding">4dp</item>
     </style>

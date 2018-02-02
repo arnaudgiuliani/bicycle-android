@@ -18,15 +18,30 @@ package com.sebastienbalard.bicycle.viewmodels
 
 import android.app.Application
 import android.arch.lifecycle.AndroidViewModel
+import android.arch.lifecycle.MutableLiveData
+import android.arch.lifecycle.ViewModel
 import com.sebastienbalard.bicycle.misc.SBLog
 import com.sebastienbalard.bicycle.models.BICPlace
 
-class BICSearchViewModel(application: Application) : AndroidViewModel(application) {
+class BICSearchViewModel : ViewModel() {
 
     companion object : SBLog()
 
+    var isSearchButtonEnabled = MutableLiveData<Boolean>()
+
     var departure: BICPlace? = null
+        set(value) {
+            field = value
+            isSearchButtonEnabled.value = departure != null && arrival != null
+        }
     var arrival: BICPlace? = null
+        set(value) {
+            field = value
+            isSearchButtonEnabled.value = departure != null && arrival != null
+        }
     var bikesCount: Int = 1
     var freeSlotsCount: Int = 1
+
+
+
 }
