@@ -28,6 +28,7 @@ import android.support.v4.content.ContextCompat
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.animation.RotateAnimation
 import android.widget.TextView
 import android.widget.Toast
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -224,6 +225,10 @@ class BICHomeActivity : SBActivity() {
         params.topMargin -= layoutSearch.measuredHeight
         layoutSearch.layoutParams = params
         menuItemSearch?.isVisible = true
+        val animate = RotateAnimation(180f, 360f, imageViewCollapse.measuredWidth / 2f, imageViewCollapse.measuredHeight / 2f)
+        animate.duration = 200
+        animate.fillAfter = true
+        imageViewCollapse.startAnimation(animate)
         hideSoftInput()
     }
 
@@ -240,6 +245,10 @@ class BICHomeActivity : SBActivity() {
         val params = layoutSearch.layoutParams as CoordinatorLayout.LayoutParams
         params.topMargin += layoutSearch.measuredHeight
         layoutSearch.layoutParams = params
+        val animate = RotateAnimation(0f, 180f, imageViewCollapse.measuredWidth / 2f, imageViewCollapse.measuredHeight / 2f)
+        animate.duration = 200
+        animate.fillAfter = true
+        imageViewCollapse.startAnimation(animate)
         showSoftInput()
     }
 
@@ -458,6 +467,10 @@ class BICHomeActivity : SBActivity() {
         }
         buttonSearch.setOnClickListener {
             i("click on button: search")
+            hideLayoutSearch()
+        }
+        layoutCollapse.setOnClickListener { _ ->
+            i("click on layout: collapse")
             hideLayoutSearch()
         }
     }

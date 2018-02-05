@@ -19,7 +19,6 @@ package com.sebastienbalard.bicycle.widgets
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.support.v4.content.ContextCompat
-import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.widget.AppCompatAutoCompleteTextView
 import android.text.Editable
 import android.text.TextWatcher
@@ -36,22 +35,20 @@ class SBClearableAutoCompleteView(context: Context, attrs: AttributeSet?) :
 
     private var listener: OnClearListener? = null
 
+    private var focused: Boolean = false
+
     init {
         setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus && !text.toString().isEmpty()) {
+            focused = hasFocus
+            if (focused && !text.toString().isEmpty()) {
                 setCompoundDrawables(null, null, buttonClear, null)
             } else {
                 setCompoundDrawables(null, null, null, null)
             }
         }
         setOnTouchListener({ _, event ->
-            if (this.compoundDrawables[2] == null) {
-                false
-            }
-            if (event.action != MotionEvent.ACTION_UP) {
-                false
-            }
-            if (event.x > (width - paddingRight - buttonClear.intrinsicWidth)) {
+            if (this.compoundDrawables[2] != null && event.action == MotionEvent.ACTION_UP
+                    && event.x > (width - paddingRight - buttonClear.intrinsicWidth)) {
                 setText("")
                 setCompoundDrawables(null, null, null, null)
                 listener?.invoke()
@@ -63,7 +60,7 @@ class SBClearableAutoCompleteView(context: Context, attrs: AttributeSet?) :
     override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
 
     override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-        if (s.isNotEmpty()) {
+        if (s.isNotEmpty() && focused) {
             this.setCompoundDrawablesWithIntrinsicBounds(null, null, buttonClear, null)
         } else {
             this.setCompoundDrawables(null, null, null, null)

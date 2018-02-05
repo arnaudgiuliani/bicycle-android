@@ -21,6 +21,8 @@
     android:layout_height="match_parent"
     tools:context="com.sebastienbalard.bicycle.views.BICHomeActivity">
 
+    <!--<include layout="@layout/bic_widget_appbar_search_view" />-->
+
     <com.google.android.gms.maps.MapView
         android:id="@+id/mapView"
         android:layout_width="match_parent"
@@ -31,13 +33,12 @@
         android:id="@+id/layoutSearch"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="-200dp"
+        android:layout_marginTop="-228dp"
         android:background="@color/bic_color_primary"
         android:orientation="vertical"
-        android:paddingBottom="@dimen/bic_margin_activity_vertical"
-        android:paddingEnd="@dimen/bic_margin_activity_horizontal"
-        android:paddingStart="@dimen/bic_margin_activity_horizontal"
-        android:paddingTop="@dimen/bic_margin_activity_vertical"
+        android:paddingEnd="@dimen/bic_margin_horizontal_default"
+        android:paddingStart="@dimen/bic_margin_horizontal_default"
+        android:paddingTop="@dimen/bic_margin_vertical_default"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
@@ -55,12 +56,12 @@
                     android:id="@+id/autoCompleteTextViewDepartureAddress"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Adresse de départ"
                     android:gravity="center_vertical"
-                    android:textColor="@color/bic_color_white"
-                    android:singleLine="true"
+                    android:hint="Adresse de départ"
+                    android:imeOptions="actionNext"
                     android:inputType="textCapSentences|textPostalAddress"
-                    android:imeOptions="actionNext"/>
+                    android:singleLine="true"
+                    android:textColor="@color/bic_color_white" />
             </android.support.design.widget.TextInputLayout>
 
             <android.support.v7.widget.AppCompatImageButton
@@ -75,14 +76,14 @@
                 android:id="@+id/editTextDepartureBikesCount"
                 android:layout_width="80dp"
                 android:layout_height="match_parent"
-                android:paddingTop="@dimen/bic_margin_activity_vertical"
-                android:layout_marginStart="@dimen/bic_margin_activity_horizontal"
+                android:layout_marginStart="@dimen/bic_margin_horizontal_default"
                 android:drawableStart="@drawable/bic_ic_bike_24dp"
-                android:textColor="@color/bic_color_white"
-                android:maxLength="2"
-                android:inputType="number"
                 android:gravity="center_vertical|end"
-                android:imeOptions="actionNext"/>
+                android:imeOptions="actionNext"
+                android:inputType="number"
+                android:maxLength="2"
+                android:paddingTop="@dimen/bic_margin_vertical_default"
+                android:textColor="@color/bic_color_white" />
         </LinearLayout>
 
         <LinearLayout
@@ -100,12 +101,12 @@
                     android:id="@+id/autoCompleteTextViewArrivalAddress"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Adresse d'arrivée"
                     android:gravity="center_vertical"
-                    android:textColor="@color/bic_color_white"
-                    android:singleLine="true"
+                    android:hint="Adresse d'arrivée"
+                    android:imeOptions="actionNext"
                     android:inputType="textCapSentences|textPostalAddress"
-                    android:imeOptions="actionNext" />
+                    android:singleLine="true"
+                    android:textColor="@color/bic_color_white" />
             </android.support.design.widget.TextInputLayout>
 
             <android.support.v7.widget.AppCompatImageButton
@@ -120,25 +121,44 @@
                 android:id="@+id/editTextArrivalFreeSlotsCount"
                 android:layout_width="80dp"
                 android:layout_height="match_parent"
-                android:paddingTop="@dimen/bic_margin_activity_vertical"
-                android:layout_marginStart="@dimen/bic_margin_activity_horizontal"
+                android:layout_marginStart="@dimen/bic_margin_horizontal_default"
                 android:drawableStart="@drawable/bic_ic_free_slot_24dp"
-                android:textColor="@color/bic_color_white"
-                android:maxLength="2"
-                android:inputType="number"
                 android:gravity="center_vertical|end"
-                android:imeOptions="actionDone"/>
+                android:imeOptions="actionDone"
+                android:inputType="number"
+                android:maxLength="2"
+                android:paddingTop="@dimen/bic_margin_vertical_default"
+                android:textColor="@color/bic_color_white" />
         </LinearLayout>
 
         <android.support.v7.widget.AppCompatButton
             android:id="@+id/buttonSearch"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/bic_margin_activity_vertical"
-            android:text="Rechercher"
+            android:layout_marginTop="@dimen/bic_margin_vertical_default"
+            android:background="@color/bic_color_accent"
             android:enabled="false"
-            android:textColor="@color/bic_color_white"
-            android:background="@color/bic_color_accent"/>
+            android:text="Rechercher"
+            android:textColor="@color/bic_color_white" />
+
+        <LinearLayout
+            android:id="@+id/layoutCollapse"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:layout_marginTop="@dimen/bic_margin_vertical_half"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:orientation="horizontal">
+
+            <android.support.v7.widget.AppCompatImageView
+                android:id="@+id/imageViewCollapse"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:src="@drawable/bic_ic_arrow_down_24dp" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

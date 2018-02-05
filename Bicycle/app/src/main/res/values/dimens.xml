@@ -16,8 +16,9 @@
 -->
 <resources>
     <!-- margins -->
-    <dimen name="bic_margin_activity_horizontal">16dp</dimen>
-    <dimen name="bic_margin_activity_vertical">16dp</dimen>
+    <dimen name="bic_margin_horizontal_default">16dp</dimen>
+    <dimen name="bic_margin_vertical_default">16dp</dimen>
+    <dimen name="bic_margin_vertical_half">8dp</dimen>
     <dimen name="bic_margin_fab">16dp</dimen>
     <dimen name="bic_size_annotation">64dp</dimen>
     <!-- text sizes -->
