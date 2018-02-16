@@ -54,6 +54,8 @@ ext.crashlytics_version = '2.6.8'
 ext.logback_version = '1.1.1-6'
 ext.arch_version = '1.1.0'
 ext.retrofit_version = '2.3.0'
+ext.kotlinx_coroutines_version = '0.20'
+ext.koin_version = '0.8.2'
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
@@ -61,7 +63,6 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     // support
-    //implementation "com.android.support:support-v4:$support_libs_version"
     implementation "com.android.support:appcompat-v7:$support_libs_version"
     implementation "com.android.support:design:$support_libs_version"
     //implementation 'com.android.support.constraint:constraint-layout:1.0.2'
@@ -78,15 +79,16 @@ dependencies {
     implementation "com.squareup.retrofit2:converter-gson:$retrofit_version"
     implementation 'com.squareup.okhttp3:logging-interceptor:3.6.0'
     implementation 'com.google.maps.android:android-maps-utils:0.4.4'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.20'
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.20"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_coroutines_version"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinx_coroutines_version"
+    implementation "org.koin:koin-android-architecture:$koin_version"
     // logs
     implementation 'org.slf4j:slf4j-api:1.7.25'
     implementation "com.github.tony19:logback-android-core:$logback_version"
     implementation "com.github.tony19:logback-android-classic:$logback_version"
     // tools
     implementation("com.crashlytics.sdk.android:crashlytics:$crashlytics_version@aar") {
-        transitive = true;
+        transitive = true
     }
     // tests
     testImplementation 'junit:junit:4.12'

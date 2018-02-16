@@ -1,5 +1,5 @@
 /**
- * Copyright © 2017 Bicycle (Sébastien BALARD)
+ * Copyright © 2018 Bicycle (Sébastien BALARD)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,17 @@
  * limitations under the License.
  */
 
-package com.sebastienbalard.bicycle
+package com.sebastienbalard.bicycle.di
 
-import android.app.Application
-import com.sebastienbalard.bicycle.di.bicycleApp
-import com.sebastienbalard.bicycle.misc.SBLog
-import org.koin.android.ext.android.startKoin
+import com.sebastienbalard.bicycle.viewmodels.BICMapViewModel
+import com.sebastienbalard.bicycle.viewmodels.BICSearchViewModel
+import org.koin.android.architecture.ext.viewModel
+import org.koin.dsl.module.applicationContext
 
-class BICApplication : Application() {
+val homeModule = applicationContext {
 
-    companion object: SBLog()
-
-    override fun onCreate() {
-        super.onCreate()
-        v("onCreate")
-        startKoin(this, bicycleApp)
-    }
-
+    viewModel { BICMapViewModel(get()) }
+    viewModel { BICSearchViewModel() }
 }
+
+val bicycleApp = listOf(homeModule)

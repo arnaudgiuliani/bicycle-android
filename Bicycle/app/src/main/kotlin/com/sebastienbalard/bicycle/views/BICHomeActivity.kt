@@ -19,7 +19,6 @@ package com.sebastienbalard.bicycle.views
 import android.Manifest
 import android.annotation.SuppressLint
 import android.arch.lifecycle.Observer
-import android.arch.lifecycle.ViewModelProviders
 import android.location.Location
 import android.os.Bundle
 import android.support.design.widget.CoordinatorLayout
@@ -45,13 +44,13 @@ import com.sebastienbalard.bicycle.misc.SBLog
 import com.sebastienbalard.bicycle.models.BICPlace
 import com.sebastienbalard.bicycle.viewmodels.BICMapViewModel
 import com.sebastienbalard.bicycle.viewmodels.BICSearchViewModel
-import com.sebastienbalard.bicycle.widgets.SBClearableAutoCompleteView
 import kotlinx.android.synthetic.main.bic_activity_home.*
 import kotlinx.android.synthetic.main.bic_widget_appbar.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.run
+import org.koin.android.architecture.ext.viewModel
 import java.util.*
 import kotlin.concurrent.timerTask
 
@@ -60,11 +59,12 @@ class BICHomeActivity : SBActivity() {
 
     companion object : SBLog()
 
-    private lateinit var mapViewModel: BICMapViewModel
-    private lateinit var searchViewModel: BICSearchViewModel
+    private val viewModelMap: BICMapViewModel by viewModel()
+    private val viewModelSearch: BICSearchViewModel by viewModel()
+
     private var googleMap: GoogleMap? = null
     private var clusterManager: ClusterManager<BICStationAnnotation>? = null
-    private var contractsAnnotations: MutableList<Marker>? = null
+    private var listContractsAnnotations: MutableList<Marker>? = null
     private var timer: Timer? = null
     private var menuItemSearch: MenuItem? = null
 
@@ -77,9 +77,7 @@ class BICHomeActivity : SBActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
 
-        mapViewModel = ViewModelProviders.of(this).get(BICMapViewModel::class.java)
-        searchViewModel = ViewModelProviders.of(this).get(BICSearchViewModel::class.java)
-        contractsAnnotations = mutableListOf()
+        listContractsAnnotations = mutableListOf()
 
         initGoogleMap(savedInstanceState)
         initSearchView()
@@ -92,7 +90,7 @@ class BICHomeActivity : SBActivity() {
         v("onStart")
         mapView.onStart()
         requestLocationPermissionsIfNeeded(NOTIFICATION_REQUEST_PERMISSION_LOCATION, onGranted = {
-            mapViewModel.userLocation.observe(this, Observer { location ->
+            viewModelMap.userLocation.observe(this, Observer { location ->
                 refreshLayout()
                 moveCamera(location)
             })
@@ -107,7 +105,7 @@ class BICHomeActivity : SBActivity() {
             NOTIFICATION_REQUEST_PERMISSION_LOCATION ->
                 processPermissionsResults(permissions, grantResults,
                         onGranted = {
-                            mapViewModel.userLocation.observe(this, Observer { location ->
+                            viewModelMap.userLocation.observe(this, Observer { location ->
                                 refreshLayout()
                                 moveCamera(location)
                             })
@@ -152,7 +150,7 @@ class BICHomeActivity : SBActivity() {
         super.onResume()
         v("onResume")
         mapView.onResume()
-        mapViewModel.hasCurrentContractChanged.observe(this, Observer { hasChanged ->
+        viewModelMap.hasCurrentContractChanged.observe(this, Observer { hasChanged ->
             hasChanged?.let {
                 if (!it) {
                     v("current contract has not changed")
@@ -161,7 +159,7 @@ class BICHomeActivity : SBActivity() {
                 }
             }
         })
-        mapViewModel.currentContract.observe(this, Observer { contract ->
+        viewModelMap.currentContract.observe(this, Observer { contract ->
             if (contract == null) {
                 d("current bounds is out of contracts covers")
                 stopTimer()
@@ -169,11 +167,11 @@ class BICHomeActivity : SBActivity() {
                 stopTimer()
                 d("refresh contract stations: ${contract.name} (${contract.provider.tag})")
                 // refresh current contract stations data
-                mapViewModel.loadCurrentContractStations()
+                viewModelMap.loadCurrentContractStations()
                 startTimer()
             }
         })
-        mapViewModel.currentStations.observe(this, Observer { stations ->
+        viewModelMap.currentStations.observe(this, Observer { stations ->
             clusterManager?.clearItems()
             stations?.map { station ->
                 clusterManager?.addItem(BICStationAnnotation(station))
@@ -183,7 +181,7 @@ class BICHomeActivity : SBActivity() {
             }
             clusterManager?.cluster()
         })
-        searchViewModel.isSearchButtonEnabled.observe(this, Observer { enabled ->
+        viewModelSearch.isSearchButtonEnabled.observe(this, Observer { enabled ->
             enabled?.let {
                 buttonSearch.isEnabled = it
             }
@@ -194,7 +192,7 @@ class BICHomeActivity : SBActivity() {
         super.onPause()
         v("onPause")
         mapView.onPause()
-        mapViewModel.currentContract.removeObservers(this)
+        viewModelMap.currentContract.removeObservers(this)
     }
 
     override fun onStop() {
@@ -273,14 +271,14 @@ class BICHomeActivity : SBActivity() {
 
     private fun startTimer() {
         val zoomLevel = googleMap?.cameraPosition?.zoom?.toInt()
-        if (timer == null && mapViewModel.currentContract.value != null && zoomLevel != null && zoomLevel >= 10) {
+        if (timer == null && viewModelMap.currentContract.value != null && zoomLevel != null && zoomLevel >= 10) {
             val delay = BuildConfig.TIME_BEFORE_REFRESH_STATIONS_DATA_IN_SECONDS * 1000
             d("start timer")
             timer = Timer()
             timer!!.scheduleAtFixedRate(timerTask {
                 d("timer fired")
-                mapViewModel.currentContract.value?.let {
-                    mapViewModel.refreshContractStations(it)
+                viewModelMap.currentContract.value?.let {
+                    viewModelMap.refreshContractStations(it)
                 }
             }, delay, delay)
         }
@@ -300,9 +298,9 @@ class BICHomeActivity : SBActivity() {
             d("current zoom level: $level")
             if (it >= 10) {
                 deleteContractsAnnotations()
-                mapViewModel.determineCurrentContract(googleMap!!.projection.visibleRegion.latLngBounds)
+                viewModelMap.determineCurrentContract(googleMap!!.projection.visibleRegion.latLngBounds)
             } else {
-                mapViewModel.currentContract.value = null
+                viewModelMap.currentContract.value = null
                 stopTimer()
                 createContractsAnnotations()
             }
@@ -312,7 +310,7 @@ class BICHomeActivity : SBActivity() {
     }
 
     private fun deleteContractsAnnotations() {
-        contractsAnnotations?.let {
+        listContractsAnnotations?.let {
             if (it.size > 0) {
                 d("delete contracts annotations")
                 it.map { marker -> marker.remove() }
@@ -331,17 +329,17 @@ class BICHomeActivity : SBActivity() {
             clusterManager?.clearItems()
             clusterManager?.cluster()
         }
-        if (contractsAnnotations?.size == 0) {
+        if (listContractsAnnotations?.size == 0) {
             async(CommonPool) {
                 var options: MarkerOptions
-                mapViewModel.allContracts.map { contract ->
+                viewModelMap.allContracts.map { contract ->
                     options = MarkerOptions()
                     options.position(contract.center)
                     options.icon(imageContract)
                     options.title(contract.name)
                     run(UI) {
                         googleMap?.addMarker(options)?.let {
-                            contractsAnnotations?.add(it)
+                            listContractsAnnotations?.add(it)
                         }
                     }
                 }
@@ -385,21 +383,21 @@ class BICHomeActivity : SBActivity() {
     private fun initSearchView() {
         autoCompleteTextViewDepartureAddress.setAdapter(BICPlacesAutoCompleteAdapter(this))
         autoCompleteTextViewDepartureAddress.setOnClearListener {
-            searchViewModel.departure = null
+            viewModelSearch.departure = null
         }
         autoCompleteTextViewDepartureAddress.setOnItemClickListener { _, _, _, _ ->
             geocode(autoCompleteTextViewDepartureAddress.text.toString().trim())?.let {
                 v("set departure place with autocompletion")
-                searchViewModel.departure = BICPlace(it)
+                viewModelSearch.departure = BICPlace(it)
                 editTextDepartureBikesCount.requestFocus()
             } ?: autoCompleteTextViewDepartureAddress.setText("")
         }
         buttonLocalizeDeparture.setOnClickListener {
-            mapViewModel.userLocation.value?.let {
+            viewModelMap.userLocation.value?.let {
                 autoCompleteTextViewDepartureAddress.text.clear()
                 v("set departure place with user location")
-                searchViewModel.departure = BICPlace(it)
-                autoCompleteTextViewDepartureAddress.setText(geocodeReverse(searchViewModel.departure!!.location))
+                viewModelSearch.departure = BICPlace(it)
+                autoCompleteTextViewDepartureAddress.setText(geocodeReverse(viewModelSearch.departure!!.location))
                 editTextDepartureBikesCount.requestFocus()
             }
         }
@@ -421,26 +419,26 @@ class BICHomeActivity : SBActivity() {
                     editTextDepartureBikesCount.setText("")
                     editTextDepartureBikesCount.append("1")
                 }
-                searchViewModel.bikesCount = count
+                viewModelSearch.bikesCount = count
             }
         }
         autoCompleteTextViewArrivalAddress.setAdapter(BICPlacesAutoCompleteAdapter(this))
         autoCompleteTextViewArrivalAddress.setOnClearListener {
-            searchViewModel.arrival = null
+            viewModelSearch.arrival = null
         }
         autoCompleteTextViewArrivalAddress.setOnItemClickListener { _, _, _, _ ->
             geocode(autoCompleteTextViewArrivalAddress.text.toString().trim())?.let {
                 v("set arrival place with autocompletion")
-                searchViewModel.arrival = BICPlace(it)
+                viewModelSearch.arrival = BICPlace(it)
                 editTextArrivalFreeSlotsCount.requestFocus()
             } ?: autoCompleteTextViewArrivalAddress.setText("")
         }
         buttonLocalizeArrival.setOnClickListener {
-            mapViewModel.userLocation.value?.let {
+            viewModelMap.userLocation.value?.let {
                 autoCompleteTextViewArrivalAddress.text.clear()
                 v("set arrival place with user location")
-                searchViewModel.arrival = BICPlace(it)
-                autoCompleteTextViewArrivalAddress.setText(geocodeReverse(searchViewModel.arrival!!.location))
+                viewModelSearch.arrival = BICPlace(it)
+                autoCompleteTextViewArrivalAddress.setText(geocodeReverse(viewModelSearch.arrival!!.location))
                 editTextArrivalFreeSlotsCount.requestFocus()
             }
         }
@@ -462,7 +460,7 @@ class BICHomeActivity : SBActivity() {
                     editTextArrivalFreeSlotsCount.setText("")
                     editTextArrivalFreeSlotsCount.append("1")
                 }
-                searchViewModel.freeSlotsCount = count
+                viewModelSearch.freeSlotsCount = count
             }
         }
         buttonSearch.setOnClickListener {
