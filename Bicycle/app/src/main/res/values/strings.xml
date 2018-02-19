@@ -28,4 +28,5 @@
         vous ne lui permettez pas d\'accéder à votre position</string>
     <string name="bic_messages_warning_get_current_contract_stations">Nous n\'avons pas pu récupérer les données des stations</string>
     <string name="bic_messages_available_soon">Bientôt disponible</string>
+    <string name="bic_messages_warning_not_the_same_contract">Votre trajet n\'est pas valide</string>
 </resources>

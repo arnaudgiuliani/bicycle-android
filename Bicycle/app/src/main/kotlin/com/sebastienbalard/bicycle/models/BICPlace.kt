@@ -19,8 +19,9 @@ package com.sebastienbalard.bicycle.models
 import android.location.Location
 import com.google.android.gms.maps.model.LatLng
 
-data class BICPlace(val latitude: Double,
-                    val longitude: Double) {
+data class BICPlace(private val latitude: Double, private val longitude: Double) {
+
+    var contract: BICContract? = null
 
     constructor(latLng: LatLng) : this(latLng.latitude, latLng.longitude)
     constructor(location: Location) : this(location.latitude, location.longitude)

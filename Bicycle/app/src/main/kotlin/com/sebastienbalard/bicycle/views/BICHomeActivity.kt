@@ -387,16 +387,20 @@ class BICHomeActivity : SBActivity() {
         }
         autoCompleteTextViewDepartureAddress.setOnItemClickListener { _, _, _, _ ->
             geocode(autoCompleteTextViewDepartureAddress.text.toString().trim())?.let {
-                v("set departure place with autocompletion")
-                viewModelSearch.departure = BICPlace(it)
+                val place = BICPlace(it)
+                place.contract = viewModelMap.getContractFor(it)
+                v("set departure place with autocompletion (${place.contract?.name})")
+                viewModelSearch.departure = place
                 editTextDepartureBikesCount.requestFocus()
             } ?: autoCompleteTextViewDepartureAddress.setText("")
         }
         buttonLocalizeDeparture.setOnClickListener {
             viewModelMap.userLocation.value?.let {
                 autoCompleteTextViewDepartureAddress.text.clear()
-                v("set departure place with user location")
-                viewModelSearch.departure = BICPlace(it)
+                val place = BICPlace(it)
+                place.contract = viewModelMap.getContractFor(it)
+                v("set departure place with user location (${place.contract?.name})")
+                viewModelSearch.departure = place
                 autoCompleteTextViewDepartureAddress.setText(geocodeReverse(viewModelSearch.departure!!.location))
                 editTextDepartureBikesCount.requestFocus()
             }
@@ -428,16 +432,20 @@ class BICHomeActivity : SBActivity() {
         }
         autoCompleteTextViewArrivalAddress.setOnItemClickListener { _, _, _, _ ->
             geocode(autoCompleteTextViewArrivalAddress.text.toString().trim())?.let {
-                v("set arrival place with autocompletion")
-                viewModelSearch.arrival = BICPlace(it)
+                val place = BICPlace(it)
+                place.contract = viewModelMap.getContractFor(it)
+                v("set arrival place with autocompletion (${place.contract?.name})")
+                viewModelSearch.arrival = place
                 editTextArrivalFreeSlotsCount.requestFocus()
             } ?: autoCompleteTextViewArrivalAddress.setText("")
         }
         buttonLocalizeArrival.setOnClickListener {
             viewModelMap.userLocation.value?.let {
                 autoCompleteTextViewArrivalAddress.text.clear()
-                v("set arrival place with user location")
-                viewModelSearch.arrival = BICPlace(it)
+                val place = BICPlace(it)
+                place.contract = viewModelMap.getContractFor(it)
+                v("set arrival place with user location (${place.contract?.name})")
+                viewModelSearch.arrival = place
                 autoCompleteTextViewArrivalAddress.setText(geocodeReverse(viewModelSearch.arrival!!.location))
                 editTextArrivalFreeSlotsCount.requestFocus()
             }
@@ -465,7 +473,11 @@ class BICHomeActivity : SBActivity() {
         }
         buttonSearch.setOnClickListener {
             i("click on button: search")
-            hideLayoutSearch()
+            if (viewModelSearch.isComplete) {
+                hideLayoutSearch()
+            } else {
+                Toast.makeText(this, R.string.bic_messages_warning_not_the_same_contract, Toast.LENGTH_LONG).showAsError(this)
+            }
         }
         layoutCollapse.setOnClickListener { _ ->
             i("click on layout: collapse")

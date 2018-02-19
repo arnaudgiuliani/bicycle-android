@@ -16,8 +16,6 @@
 
 package com.sebastienbalard.bicycle.viewmodels
 
-import android.app.Application
-import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import com.sebastienbalard.bicycle.misc.SBLog
@@ -42,6 +40,8 @@ class BICSearchViewModel : ViewModel() {
     var bikesCount: Int = 1
     var freeSlotsCount: Int = 1
 
-
+    val isComplete: Boolean
+        get() = departure?.contract != null && arrival?.contract != null
+                && (departure!!.contract!!.center == arrival!!.contract!!.center)
 
 }
