@@ -21,6 +21,10 @@
     <string name="bic_actions_search">Rechercher</string>
     <string name="bic_actions_favorites">Mes trajets favoris</string>
     <string name="bic_actions_about">À propos</string>
+    <!-- commons -->
+    <string name="bic_commons_ride">Votre trajet</string>
+    <string name="bic_commons_departure">Départ</string>
+    <string name="bic_commons_arrival">Arrivée</string>
     <!-- messages -->
     <string name="bic_messages_error_no_play_services_installed">Merci de vérifier que les Google Play Services sont
         bien installés sur votre appareil</string>

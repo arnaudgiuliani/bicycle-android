@@ -23,7 +23,6 @@ import android.content.pm.PackageManager
 import android.support.v4.app.ActivityCompat
 import android.view.inputmethod.InputMethodManager
 
-
 fun Activity.requestLocationPermissionsIfNeeded(requestCode: Int, onGranted: () -> Unit) {
     requestPermissionsIfNeeded(requestCode,
             onGranted,

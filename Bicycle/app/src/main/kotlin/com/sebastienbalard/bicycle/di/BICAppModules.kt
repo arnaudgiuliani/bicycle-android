@@ -16,7 +16,9 @@
 
 package com.sebastienbalard.bicycle.di
 
+import com.sebastienbalard.bicycle.viewmodels.BICHomeViewModel
 import com.sebastienbalard.bicycle.viewmodels.BICMapViewModel
+import com.sebastienbalard.bicycle.viewmodels.BICRideViewModel
 import com.sebastienbalard.bicycle.viewmodels.BICSearchViewModel
 import org.koin.android.architecture.ext.viewModel
 import org.koin.dsl.module.applicationContext
@@ -24,7 +26,14 @@ import org.koin.dsl.module.applicationContext
 val homeModule = applicationContext {
 
     viewModel { BICMapViewModel(get()) }
+    viewModel { BICHomeViewModel(get()) }
     viewModel { BICSearchViewModel() }
 }
 
-val bicycleApp = listOf(homeModule)
+val rideModule = applicationContext {
+
+    viewModel { BICMapViewModel(get()) }
+    viewModel { BICRideViewModel() }
+}
+
+val bicycleApp = listOf(homeModule, rideModule)

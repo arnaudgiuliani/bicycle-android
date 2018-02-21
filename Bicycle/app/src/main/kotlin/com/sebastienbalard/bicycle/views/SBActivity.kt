@@ -18,14 +18,27 @@ package com.sebastienbalard.bicycle.views
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import com.sebastienbalard.bicycle.R
-import com.sebastienbalard.bicycle.misc.SBLog
-import kotlinx.android.synthetic.main.bic_widget_appbar.*
+import android.view.MenuItem
+
 
 open class SBActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //overridePendingTransition(0,0)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        return when (item?.itemId) {
+            16908332  -> {
+                onBackPressed()
+                true
+            }
+            /*android.R.id.home -> {
+                onBackPressed()
+                true
+            }*/
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 }

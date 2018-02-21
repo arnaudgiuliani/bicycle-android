@@ -1,5 +1,5 @@
 /**
- * Copyright © 2017 Bicycle (Sébastien BALARD)
+ * Copyright © 2018 Bicycle (Sébastien BALARD)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,15 @@
 
 package com.sebastienbalard.bicycle.viewmodels
 
-import android.app.Application
-import android.arch.lifecycle.AndroidViewModel
+import android.arch.lifecycle.ViewModel
 import com.sebastienbalard.bicycle.misc.SBLog
-import com.sebastienbalard.bicycle.models.SBLocationLiveData
+import com.sebastienbalard.bicycle.models.BICStation
 
-class BICMapViewModel(application: Application) : AndroidViewModel(application) {
+class BICRideViewModel : ViewModel() {
 
     companion object : SBLog()
 
-    var userLocation = SBLocationLiveData(getApplication())
+    var departureNearestStations: List<BICStation>? = null
+    var arrivalNearestStations: List<BICStation>? = null
+
 }

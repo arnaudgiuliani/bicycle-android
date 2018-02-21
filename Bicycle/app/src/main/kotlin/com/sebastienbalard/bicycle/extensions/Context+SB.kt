@@ -24,6 +24,7 @@ import android.location.Geocoder
 import android.net.Uri
 import android.os.Build
 import android.support.v4.content.ContextCompat
+import android.support.v4.graphics.drawable.DrawableCompat
 import android.util.DisplayMetrics
 import android.util.TypedValue
 import com.google.android.gms.maps.model.BitmapDescriptor
@@ -54,9 +55,12 @@ fun Context.getBitmapDescriptor(id: Int, width: Int, height: Int): BitmapDescrip
     }
 }
 
-fun Context.getBitmap(id: Int, width: Int, height: Int): Bitmap {
+fun Context.getBitmap(resId: Int, width: Int, height: Int, tintColorId: Int? = null): Bitmap {
 
-    var drawable = ContextCompat.getDrawable(this, id)
+    var drawable = ContextCompat.getDrawable(this, resId)
+    tintColorId?.let {
+        DrawableCompat.setTint(drawable!!, ContextCompat.getColor(this, tintColorId))
+    }
     /*if (Build.VERSION.SDK_INT < 21) {
         drawable = DrawableCompat.wrap(drawable!!).mutate()
     }*/
