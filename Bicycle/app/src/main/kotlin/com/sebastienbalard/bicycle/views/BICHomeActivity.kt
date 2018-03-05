@@ -276,6 +276,8 @@ class BICHomeActivity : SBMapActivity() {
             it.cancel()
             timer = null
         }
+        var array = DoubleArray(7)
+        array.map { element -> element + 1 }
     }
 
     private fun refreshMarkers() {
@@ -318,7 +320,7 @@ class BICHomeActivity : SBMapActivity() {
         if (listContractsAnnotations?.size == 0) {
             async(CommonPool) {
                 var options: MarkerOptions
-                viewModelHome.allContracts.map { contract ->
+                viewModelHome.getAllContracts().map { contract ->
                     options = MarkerOptions()
                     options.position(contract.center)
                     options.icon(imageContract)
@@ -440,7 +442,7 @@ class BICHomeActivity : SBMapActivity() {
                 hideLayoutSearch()
                 startActivity(BICRideActivity.getIntentForRide(this, viewModelSearch.departure!!.location.latitude,
                         viewModelSearch.departure!!.location.longitude, viewModelSearch.arrival!!.location.latitude,
-                        viewModelSearch.arrival!!.location.longitude))
+                        viewModelSearch.arrival!!.location.longitude, viewModelSearch.bikesCount, viewModelSearch.freeSlotsCount))
             } else {
                 Toast.makeText(this, R.string.bic_messages_warning_not_the_same_contract, Toast.LENGTH_LONG).showAsError(this)
             }

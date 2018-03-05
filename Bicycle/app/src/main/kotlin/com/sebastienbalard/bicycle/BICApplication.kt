@@ -17,18 +17,29 @@
 package com.sebastienbalard.bicycle
 
 import android.app.Application
+import android.content.Context
+import android.content.res.Resources
 import com.sebastienbalard.bicycle.di.bicycleApp
 import com.sebastienbalard.bicycle.misc.SBLog
 import org.koin.android.ext.android.startKoin
 
 class BICApplication : Application() {
 
-    companion object: SBLog()
+    companion object: SBLog() {
+
+        private lateinit var instance: BICApplication
+
+        val context: Context
+            get() = instance.applicationContext
+        val resources: Resources
+            get() = instance.resources
+    }
 
     override fun onCreate() {
         super.onCreate()
         v("onCreate")
         startKoin(this, bicycleApp)
+        instance = this
     }
 
 }

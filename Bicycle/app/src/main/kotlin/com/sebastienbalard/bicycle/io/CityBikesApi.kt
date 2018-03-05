@@ -18,10 +18,13 @@ package com.sebastienbalard.bicycle.io
 
 import com.google.gson.GsonBuilder
 import com.sebastienbalard.bicycle.io.dtos.CBContractResponseDto
+import io.reactivex.Single
+import io.reactivex.schedulers.Schedulers
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Call
 import retrofit2.Retrofit
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -44,6 +47,7 @@ interface CityBikesApi {
             // retrofit
             val retrofit = Retrofit.Builder().client(httpClient)
                     .addConverterFactory(GsonConverterFactory.create(gson))
+                    .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io()))
                     .baseUrl("http://api.citybik.es/v2/networks/")
                     .build()
             retrofit.create(CityBikesApi::class.java)
@@ -51,5 +55,5 @@ interface CityBikesApi {
     }
 
     @GET("{contract_name}?fields=stations")
-    fun getStations(@Path("contract_name") name: String): Call<CBContractResponseDto>
+    fun getStations(@Path("contract_name") name: String): Single<CBContractResponseDto>
 }

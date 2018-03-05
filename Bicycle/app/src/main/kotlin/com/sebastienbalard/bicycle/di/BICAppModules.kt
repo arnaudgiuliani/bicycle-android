@@ -23,17 +23,24 @@ import com.sebastienbalard.bicycle.viewmodels.BICSearchViewModel
 import org.koin.android.architecture.ext.viewModel
 import org.koin.dsl.module.applicationContext
 
+class BICContractRepository
+
+val dataModule = applicationContext {
+
+    provide { BICContractRepository() }
+}
+
 val homeModule = applicationContext {
 
     viewModel { BICMapViewModel(get()) }
-    viewModel { BICHomeViewModel(get()) }
+    viewModel { BICHomeViewModel(get(), get()) }
     viewModel { BICSearchViewModel() }
 }
 
 val rideModule = applicationContext {
 
     viewModel { BICMapViewModel(get()) }
-    viewModel { BICRideViewModel() }
+    viewModel { BICRideViewModel(get()) }
 }
 
-val bicycleApp = listOf(homeModule, rideModule)
+val bicycleApp = listOf(dataModule, homeModule, rideModule)

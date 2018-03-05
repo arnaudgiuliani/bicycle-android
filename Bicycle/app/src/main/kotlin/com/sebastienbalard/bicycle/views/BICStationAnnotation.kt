@@ -38,27 +38,13 @@ open class BICStationAnnotation(val station: BICStation) : ClusterItem {
         return station.location
     }
 
-    open class Renderer(context: Context,
-                         map: GoogleMap,
-                         clusterManager: ClusterManager<BICStationAnnotation>) : DefaultClusterRenderer<BICStationAnnotation>(context, map, clusterManager) {
-
-        private val size = context.resources.getDimensionPixelSize(R.dimen.bic_size_annotation)
-        private val textSize = context.resources.getDimensionPixelSize(R.dimen.bic_size_font_body)
-        private val imageStation = context.getBitmap(R.drawable.bic_img_station, size, size)
-        private val colorWhite = ContextCompat.getColor(context, R.color.bic_color_white)
+    open class Renderer(context: Context, map: GoogleMap, clusterManager: ClusterManager<BICStationAnnotation>) : DefaultClusterRenderer<BICStationAnnotation>(context, map, clusterManager) {
 
         override fun onBeforeClusterItemRendered(item: BICStationAnnotation?,
                                                  markerOptions: MarkerOptions?) {
-
-            var icon = imageStation
-            item?.station?.availableBikesCount?.let {
-                icon = imageStation.drawOn(it.toString(), colorWhite, textSize.toFloat(), 3.75f)
+            item?.station?.let {
+                markerOptions!!.icon(BitmapDescriptorFactory.fromBitmap(it.icon)).title(it.name)
             }
-            item?.station?.freeStandsCount?.let {
-                icon = icon.drawOn(it.toString(), colorWhite, textSize.toFloat(), 1.65f)
-            }
-
-            markerOptions!!.icon(BitmapDescriptorFactory.fromBitmap(icon)).title(item?.station?.name)
         }
     }
 }

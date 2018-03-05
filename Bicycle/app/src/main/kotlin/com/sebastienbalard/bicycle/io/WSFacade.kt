@@ -20,6 +20,10 @@ import com.sebastienbalard.bicycle.io.dtos.CBContractResponseDto
 import com.sebastienbalard.bicycle.misc.SBLog
 import com.sebastienbalard.bicycle.models.BICContract
 import com.sebastienbalard.bicycle.models.BICStation
+import io.reactivex.Flowable
+import io.reactivex.Observable
+import io.reactivex.Single
+import io.reactivex.schedulers.Schedulers
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -28,7 +32,13 @@ class WSFacade {
 
     companion object: SBLog() {
 
-        fun getStationsByContract(contract: BICContract, success: (List<BICStation>?) -> Unit, failure: (Throwable?) -> Unit) {
+        fun getStationsByContract(contract: BICContract): Single<List<BICStation>> {
+            val contractName = contract.url.substring(contract.url.lastIndexOf('/') + 1)
+            d("contract endpoint: $contractName")
+            return CityBikesApi.instance.getStations(contractName).map { response -> response.network.stations }
+        }
+
+        /*fun getStationsByContract(contract: BICContract, success: (List<BICStation>?) -> Unit, failure: (Throwable?) -> Unit) {
             val contractName = contract.url.substring(contract.url.lastIndexOf('/') + 1)
             d("contract endpoint: $contractName")
             CityBikesApi.instance.getStations(contractName).enqueue(object : Callback<CBContractResponseDto> {
@@ -49,6 +59,6 @@ class WSFacade {
                     failure(t)
                 }
             })
-        }
+        }*/
     }
 }

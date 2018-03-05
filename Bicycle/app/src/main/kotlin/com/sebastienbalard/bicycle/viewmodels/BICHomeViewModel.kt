@@ -32,41 +32,44 @@ import com.sebastienbalard.bicycle.misc.SBLog
 import com.sebastienbalard.bicycle.models.BICContract
 import com.sebastienbalard.bicycle.models.BICStation
 import com.sebastienbalard.bicycle.models.SBLocationLiveData
+import com.sebastienbalard.bicycle.repositories.BICContractRepository
+import io.reactivex.Scheduler
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.functions.Consumer
+import io.reactivex.internal.util.ExceptionHelper
+import io.reactivex.schedulers.Schedulers
 import java.io.IOException
 import java.nio.charset.Charset
 
-class BICHomeViewModel(application: Application) : AndroidViewModel(application) {
+class BICHomeViewModel(application: Application, private val contractRepository: BICContractRepository) : AndroidViewModel(application) {
 
     companion object : SBLog()
 
-    var allContracts = ArrayList<BICContract>()
+    private val disposables: CompositeDisposable = CompositeDisposable()
+
     var currentContract = MutableLiveData<BICContract>()
     var hasCurrentContractChanged = MutableLiveData<Boolean>()
     var currentStations = MutableLiveData<List<BICStation>>()
-    private var cacheStations = HashMap<String, List<BICStation>>()
 
-    init {
-        loadContracts()
+    override fun onCleared() {
+        super.onCleared()
+        disposables.clear()
+    }
+
+    fun getAllContracts(): List<BICContract> {
+        return contractRepository.allContracts
     }
 
     fun loadCurrentContractStations() {
-        if (cacheStations.containsKey(currentContract.value!!.name)) {
-            currentStations.value = cacheStations.getValue(currentContract.value!!.name)
-        } else {
-            refreshContractStations(currentContract.value!!)
-        }
+        disposables.add(contractRepository.getStationsFor(currentContract.value!!).observeOn(Schedulers.computation()).subscribe({
+            stations -> currentStations.value = stations
+        }, { _ -> currentStations.value = null }))
     }
 
     fun refreshContractStations(contract: BICContract) {
-        WSFacade.getStationsByContract(contract, success = {
-            it?.let {
-                cacheStations[contract.name] = it
-                currentStations.value = it
-            }
-        }, failure = {
-            e("fail to get contract stations", it)
-            currentStations.value = null
-        })
+        disposables.add(contractRepository.refreshStationsFor(contract).observeOn(Schedulers.computation()).subscribe({
+            stations -> currentStations.value = stations
+        }, { _ -> currentStations.value = null }))
     }
 
     fun determineCurrentContract(visibleBounds: LatLngBounds) {
@@ -105,7 +108,7 @@ class BICHomeViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun getContractFor(latLng: LatLng): BICContract? {
-        val filteredList = allContracts.filter { contract -> contract.bounds.contains(latLng) }
+        val filteredList = contractRepository.allContracts.filter { contract -> contract.bounds.contains(latLng) }
         var rightContract: BICContract? = null
         if (filteredList.isNotEmpty()) {
             rightContract = filteredList.first()
@@ -125,21 +128,5 @@ class BICHomeViewModel(application: Application) : AndroidViewModel(application)
             }
         }
         return rightContract
-    }
-
-    private fun loadContracts() {
-        try {
-            val inputStream = getApplication<BICApplication>().assets.open("contracts.json")
-            val size = inputStream.available()
-            val buffer = ByteArray(size)
-            inputStream.read(buffer)
-            inputStream.close()
-            val json = String(buffer, Charset.forName("UTF-8"))
-
-            allContracts = Gson().fromJson(json, object : TypeToken<ArrayList<BICContract>>() {}.type)
-            d("${allContracts.size} contracts loaded")
-        } catch (exception: IOException) {
-            e("fail to load contracts from assets", exception)
-        }
     }
 }
