@@ -16,30 +16,28 @@
 
 package com.sebastienbalard.bicycle.di
 
+import com.sebastienbalard.bicycle.repositories.BICContractRepository
 import com.sebastienbalard.bicycle.viewmodels.BICHomeViewModel
 import com.sebastienbalard.bicycle.viewmodels.BICMapViewModel
 import com.sebastienbalard.bicycle.viewmodels.BICRideViewModel
 import com.sebastienbalard.bicycle.viewmodels.BICSearchViewModel
 import org.koin.android.architecture.ext.viewModel
+import org.koin.android.ext.koin.androidApplication
 import org.koin.dsl.module.applicationContext
 
-class BICContractRepository
-
 val dataModule = applicationContext {
-
-    provide { BICContractRepository() }
+    bean { BICContractRepository() }
 }
 
 val homeModule = applicationContext {
-
-    viewModel { BICMapViewModel(get()) }
-    viewModel { BICHomeViewModel(get(), get()) }
+    //    viewModel { BICMapViewModel(get()) }
+    viewModel { BICHomeViewModel(androidApplication(), get()) }
     viewModel { BICSearchViewModel() }
 }
 
 val rideModule = applicationContext {
 
-    viewModel { BICMapViewModel(get()) }
+    viewModel { BICMapViewModel(androidApplication()) }
     viewModel { BICRideViewModel(get()) }
 }
 
